@@ -14,7 +14,7 @@
       <header class="header">
         <div class="header-row">
           <h1>Grok Link</h1>
-          <span id="version-badge" class="version-badge">v0.5.2</span>
+          <span id="version-badge" class="version-badge">v0.5.4</span>
           <button type="button" id="show-guide-btn" class="btn btn-small btn-ghost hidden">Setup guide</button>
         </div>
       </header>
@@ -119,18 +119,15 @@
           <details id="guide-step-3" class="guide-step">
             <summary><span class="guide-step-badge" id="badge-step-3">3</span> Add the Grok Link helper script</summary>
             <div class="guide-step-body">
-              <p>This is a one-time copy-and-paste into Tampermonkey.</p>
+              <p>One click — Tampermonkey installs or updates the helper automatically.</p>
               <ol class="numbered-steps">
-                <li>Click <strong>Open script file</strong> — Notepad opens with the script.</li>
-                <li>In Notepad: press <kbd>Ctrl</kbd>+<kbd>A</kbd> (select all), then <kbd>Ctrl</kbd>+<kbd>C</kbd> (copy).</li>
-                <li>Click the Tampermonkey icon → <strong>Dashboard</strong>.</li>
-                <li>Click the <strong>+</strong> tab or <strong>Create a new script</strong>.</li>
-                <li>Delete any template text in the editor, then press <kbd>Ctrl</kbd>+<kbd>V</kbd> (paste).</li>
-                <li>Save: <kbd>Ctrl</kbd>+<kbd>S</kbd> or File → Save.</li>
-                <li>Make sure the script toggle is <strong>ON</strong> (enabled).</li>
+                <li>Click <strong>Install browser bridge</strong> below.</li>
+                <li>Your browser opens the script file. Tampermonkey shows an <strong>Install</strong> or <strong>Update</strong> button — click it.</li>
+                <li>Make sure the script toggle is <strong>ON</strong> (enabled) in Tampermonkey.</li>
+                <li>If Tampermonkey does not appear, use Dashboard → Create new script and paste from the file path shown below.</li>
               </ol>
               <div class="actions">
-                <button type="button" id="guide-install-script-btn" class="btn btn-primary">Open script file</button>
+                <button type="button" id="guide-install-script-btn" class="btn btn-primary">Install browser bridge</button>
               </div>
               <p id="script-path-hint" class="hint"></p>
             </div>

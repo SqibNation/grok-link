@@ -9,6 +9,11 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. "$PSScriptRoot\bridge-common.ps1"
+
+if (-not (Ensure-GrokLinkRunning -Port $Port)) {
+    Write-Error "Grok Link bridge not available. Launch Grok Link from the desktop shortcut or tray."
+}
 
 $payload = @{
     source  = $Source

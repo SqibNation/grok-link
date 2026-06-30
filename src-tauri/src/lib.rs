@@ -20,12 +20,37 @@ fn browser_bridge_path() -> PathBuf {
         .join("grok-link-bridge.user.js")
 }
 
+fn userscript_version(content: &str) -> Option<&str> {
+    content.lines().find_map(|line| {
+        let trimmed = line.trim();
+        if trimmed.starts_with("// @version") {
+            trimmed.split_whitespace().last()
+        } else {
+            None
+        }
+    })
+}
+
+fn file_url_for_path(path: &PathBuf) -> Result<String, String> {
+    let canonical = path.canonicalize().map_err(|e| e.to_string())?;
+    let mut s = canonical.to_string_lossy().to_string();
+    if let Some(stripped) = s.strip_prefix(r"\\?\") {
+        s = stripped.to_string();
+    }
+    Ok(format!("file:///{}", s.replace('\\', "/")))
+}
+
 fn ensure_browser_bridge_script() -> Result<PathBuf, String> {
     let path = browser_bridge_path();
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent).map_err(|e| e.to_string())?;
     }
-    if !path.exists() {
+    let bundled_ver = userscript_version(BROWSER_BRIDGE_SCRIPT);
+    let needs_write = match fs::read_to_string(&path) {
+        Ok(existing) => userscript_version(&existing) != bundled_ver,
+        Err(_) => true,
+    };
+    if needs_write {
         fs::write(&path, BROWSER_BRIDGE_SCRIPT).map_err(|e| e.to_string())?;
     }
     Ok(path)
@@ -161,15 +186,22 @@ fn refresh_inbox(app: AppHandle) -> Result<Vec<Handoff>, String> {
 }
 
 #[tauri::command]
+fn browser_bridge_version() -> Result<String, String> {
+    Ok(userscript_version(BROWSER_BRIDGE_SCRIPT)
+        .unwrap_or("unknown")
+        .to_string())
+}
+
+#[tauri::command]
 fn install_browser_bridge(app: AppHandle) -> Result<String, String> {
     let path = ensure_browser_bridge_script()?;
-    app.opener()
-        .open_url("https://www.tampermonkey.net/", None::<&str>)
-        .map_err(|e| e.to_string())?;
-    Command::new("notepad.exe")
-        .arg(&path)
-        .spawn()
-        .map_err(|e| e.to_string())?;
+    let file_url = file_url_for_path(&path)?;
+    if app.opener().open_url(&file_url, None::<&str>).is_err() {
+        Command::new("notepad.exe")
+            .arg(&path)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
     Ok(path.to_string_lossy().into_owned())
 }
 
@@ -218,7 +250,8 @@ pub fn run() {
             mark_handoff_sent,
             submit_handoff_response,
             refresh_inbox,
-            install_browser_bridge
+            install_browser_bridge,
+            browser_bridge_version
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

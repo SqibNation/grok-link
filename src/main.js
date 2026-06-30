@@ -203,7 +203,7 @@ async function installBrowserBridge() {
     const hint = document.getElementById("script-path-hint");
     if (hint) hint.textContent = `Script file: ${path}`;
     renderGuideUI();
-    showToast("Copy the script from Notepad into Tampermonkey (see Step 3)", "info");
+    showToast("Tampermonkey should offer Install or Update — click it in your browser", "info");
     document.getElementById("guide-step-4")?.open = true;
   } catch (e) {
     showToast(`Could not open script: ${e.message || e}`, "info");
@@ -500,7 +500,7 @@ async function initMeta() {
     appVersion = await tauriInvoke("app_version");
     document.getElementById("version-badge").textContent = `v${appVersion}`;
   } catch {
-    document.getElementById("version-badge").textContent = "v0.5.2";
+    document.getElementById("version-badge").textContent = "v0.5.4";
   }
   try {
     const port = await tauriInvoke("bridge_port");

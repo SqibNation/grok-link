@@ -14,9 +14,19 @@ Write-Host "This userscript auto-syncs SuperGrok replies back to Grok Build." -F
 Write-Host ""
 Write-Host "1. Install Tampermonkey (Chrome/Edge/Firefox)" -ForegroundColor Yellow
 Write-Host "   https://www.tampermonkey.net/" -ForegroundColor Gray
-Write-Host "2. Tampermonkey -> Create new script -> replace contents with:" -ForegroundColor Yellow
-Write-Host "   $scriptPath" -ForegroundColor Green
-Write-Host "3. Save. Ensure the script is enabled on grok.com" -ForegroundColor Yellow
+Write-Host "2. Click Install browser bridge in Grok Link (opens script in browser)" -ForegroundColor Yellow
+Write-Host "   Tampermonkey should offer one-click Install / Update." -ForegroundColor Gray
+Write-Host "3. Confirm the script is enabled on grok.com" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "Opening script file..." -ForegroundColor Cyan
-Start-Process notepad.exe $scriptPath
+Write-Host "Script path:" -ForegroundColor Cyan
+Write-Host "   $scriptPath" -ForegroundColor Green
+
+$dest = Join-Path $env:USERPROFILE ".grok-link\browser\grok-link-bridge.user.js"
+$destDir = Split-Path $dest -Parent
+New-Item -ItemType Directory -Path $destDir -Force | Out-Null
+Copy-Item $scriptPath $dest -Force
+
+$resolved = (Resolve-Path $dest).Path -replace '\\', '/'
+$url = "file:///$resolved"
+Write-Host "Opening in browser for Tampermonkey install..." -ForegroundColor Cyan
+Start-Process $url

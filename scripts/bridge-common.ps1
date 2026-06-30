@@ -43,3 +43,47 @@ function Get-Handoff {
     )
     Invoke-RestMethod -Uri "$(Get-BridgeBaseUrl -Port $Port)/api/handoffs/$Id" -Method Get -TimeoutSec 10
 }
+
+function Wait-ForGrokLink {
+    param(
+        [int]$Port = $script:DefaultBridgePort,
+        [int]$TimeoutSec = 30,
+        [int]$IntervalSec = 1,
+        [switch]$Quiet
+    )
+    $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSec)
+    while ([DateTime]::UtcNow -lt $deadline) {
+        try {
+            $health = Invoke-RestMethod -Uri "$(Get-BridgeBaseUrl -Port $Port)/api/health" -Method Get -TimeoutSec 2
+            if ($health.ok) {
+                if (-not $Quiet) {
+                    Write-Host "Grok Link bridge ready." -ForegroundColor Green
+                }
+                return $true
+            }
+        } catch {
+            # retry
+        }
+        if (-not $Quiet) {
+            Write-Host "Waiting for Grok Link bridge..." -ForegroundColor Yellow
+        }
+        Start-Sleep -Seconds $IntervalSec
+    }
+    return $false
+}
+
+function Ensure-GrokLinkRunning {
+    param(
+        [int]$Port = $script:DefaultBridgePort,
+        [int]$WaitSec = 30
+    )
+    if (Wait-ForGrokLink -Port $Port -TimeoutSec 2 -Quiet) {
+        return $true
+    }
+    $startScript = Join-Path (Split-Path $PSScriptRoot -Parent) "scripts\Start-GrokLink.ps1"
+    if (Test-Path $startScript) {
+        Write-Host "Starting Grok Link..." -ForegroundColor Cyan
+        & $startScript | Out-Null
+    }
+    return (Wait-ForGrokLink -Port $Port -TimeoutSec $WaitSec)
+}
