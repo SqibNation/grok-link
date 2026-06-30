@@ -64,6 +64,50 @@ To disable startup later:
 .\scripts\Set-Startup.ps1 -Disable
 ```
 
+End-user guide: [INSTALL.txt](INSTALL.txt)
+
+## Distribution
+
+### Package a release zip
+
+```powershell
+.\scripts\Package-Release.ps1
+```
+
+Creates `dist/release/Grok-Link-{version}-win64.zip` with:
+
+- Portable exe + SHA-256 checksum
+- NSIS installer (if already built)
+- Browser bridge userscript
+- LICENSE, INSTALL.txt, CHANGELOG, docs, scripts
+
+Rebuild and package in one step:
+
+```powershell
+.\scripts\Package-Release.ps1 -Build
+```
+
+### Verify a download
+
+```powershell
+Get-FileHash -Algorithm SHA256 "dist\release\Grok-Link-0.3.0-win64.zip"
+# Compare with dist\release\Grok-Link-0.3.0-win64.zip.sha256
+```
+
+### Security note
+
+Executables are **not code-signed**. Windows may show SmartScreen warnings for unsigned binaries. For maximum trust, clone this repo and build locally with `.\scripts\build.ps1`.
+
+### Prerequisites (for users)
+
+- Windows 10+ (64-bit)
+- WebView2 runtime (preinstalled on most Windows 11 systems)
+- Tampermonkey (optional, for seamless SuperGrok reply sync)
+
+## License
+
+MIT — see [LICENSE](LICENSE). Copyright (c) 2026 Zachary H. Roberts.
+
 ## Project root
 
 `C:\Users\Ranzh\grok-link`

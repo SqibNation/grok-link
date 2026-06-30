@@ -1,0 +1,59 @@
+Grok Link - Windows Install Guide
+=================================
+
+Grok Link bridges Grok Build (IDE agent) and SuperGrok (browser).
+
+Requirements
+------------
+- Windows 10 or later (64-bit)
+- Microsoft Edge WebView2 (usually preinstalled on Windows 11)
+- A modern browser for SuperGrok (Edge, Chrome, Firefox)
+- Optional: Tampermonkey extension for automatic reply sync
+
+Quick install (recommended)
+---------------------------
+1. Verify the SHA-256 checksum (optional but recommended):
+     Get-FileHash -Algorithm SHA256 "Grok Link 0.3.0.exe"
+   Compare with Grok Link 0.3.0.exe.sha256
+
+2. Run the installer:
+     Grok Link_0.3.0_x64-setup.exe
+   Or use the portable exe directly:
+     "Grok Link 0.3.0.exe"
+
+3. Launch Grok Link:
+   - Desktop shortcut "Grok Link", or
+   - Run scripts\Start-GrokLink.ps1 from a full source install
+
+4. Seamless sync (one-time):
+   - In Grok Link, click "Install browser bridge"
+   - Paste the userscript into Tampermonkey (tampermonkey.net)
+   - Enable the script on grok.com
+
+Verify it works
+---------------
+- Grok Link window shows: Bridge online at http://127.0.0.1:3877/api/handoff
+- In PowerShell:
+    Invoke-RestMethod http://127.0.0.1:3877/api/health
+
+Data & privacy
+--------------
+All handoff data stays local on your PC:
+  %USERPROFILE%\.grok-link\
+The bridge listens on localhost only (127.0.0.1:3877). Nothing is sent to the cloud by Grok Link itself.
+
+Windows SmartScreen
+-------------------
+The executable is not code-signed. Windows may show an "unknown publisher" warning.
+Prefer building from source (see README.md) if you want full transparency.
+
+Uninstall
+---------
+- Delete: %LOCALAPPDATA%\Programs\Grok Link\
+- Remove startup shortcut:
+    scripts\Set-Startup.ps1 -Disable
+- Optional: remove data folder %USERPROFILE%\.grok-link\
+
+Support
+-------
+- README.md and docs\GROK-BUILD-INTEGRATION.md in the release or repository
