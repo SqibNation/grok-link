@@ -1,7 +1,7 @@
 const STORAGE_KEY = "grok-link-settings";
 
 let activeHandoffId = null;
-let appVersion = "0.5.1";
+let appVersion = "0.5.2";
 let bridgeOk = false;
 
 async function tauriInvoke(cmd, args = {}) {
@@ -479,7 +479,7 @@ async function initMeta() {
     appVersion = await tauriInvoke("app_version");
     document.getElementById("version-badge").textContent = `v${appVersion}`;
   } catch {
-    document.getElementById("version-badge").textContent = "v0.5.1";
+    document.getElementById("version-badge").textContent = "v0.5.2";
   }
   try {
     const port = await tauriInvoke("bridge_port");

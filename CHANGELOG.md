@@ -2,6 +2,11 @@
 
 All notable changes to Grok Link are documented here.
 
+## [0.5.2] - 2026-06-30
+
+### Changed
+- Documentation: replaced personal Windows paths with generic clone placeholders (`grok-link`, `$GrokLink`)
+
 ## [0.5.1] - 2026-06-30
 
 ### Changed

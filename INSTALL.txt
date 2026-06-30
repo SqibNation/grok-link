@@ -13,13 +13,13 @@ Requirements
 Quick install (recommended)
 ---------------------------
 1. Verify the SHA-256 checksum (optional but recommended):
-     Get-FileHash -Algorithm SHA256 "Grok Link 0.5.1.exe"
-   Compare with Grok Link 0.5.1.exe.sha256
+     Get-FileHash -Algorithm SHA256 "Grok Link 0.5.2.exe"
+   Compare with Grok Link 0.5.2.exe.sha256
 
 2. Run the installer:
-     Grok Link_0.5.1_x64-setup.exe
+     Grok Link_0.5.2_x64-setup.exe
    Or use the portable exe directly:
-     "Grok Link 0.5.1.exe"
+     "Grok Link 0.5.2.exe"
 
 3. Launch Grok Link:
    - Desktop shortcut "Grok Link", or
