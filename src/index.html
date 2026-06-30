@@ -12,7 +12,7 @@
       <header class="header">
         <div class="header-row">
           <h1>Grok Link</h1>
-          <span id="version-badge" class="version-badge">v0.2.0</span>
+          <span id="version-badge" class="version-badge">v0.2.1</span>
         </div>
         <p class="subtitle">Bridge between <strong>Grok Build</strong> (this IDE agent) and <strong>SuperGrok</strong> in your browser.</p>
         <p id="bridge-status" class="bridge-status">Bridge starting...</p>
@@ -39,7 +39,7 @@
           <button type="button" id="clear-btn" class="btn">Clear</button>
           <button type="button" id="open-btn" class="btn btn-primary">Open SuperGrok</button>
         </div>
-        <p class="hint">Shortcut: Ctrl+Enter. Default: <code>grok.com</code> with clipboard backup.</p>
+        <p class="hint">Shortcut: Ctrl+Enter. Opens <code>grok.com/?q=...</code> to prefill (and usually auto-submit). Clipboard is a backup.</p>
         <p id="status" class="status" role="status" aria-live="polite"></p>
       </section>
 
@@ -59,8 +59,8 @@
         <div class="options-body">
           <fieldset class="option-group">
             <legend>SuperGrok URL</legend>
-            <label><input type="radio" name="grok-host" value="com" checked /> grok.com (SuperGrok)</label>
-            <label><input type="radio" name="grok-host" value="xai" /> grok.x.ai with ?q= prefill</label>
+            <label><input type="radio" name="grok-host" value="com" checked /> grok.com/?q= (SuperGrok)</label>
+            <label><input type="radio" name="grok-host" value="xai" /> grok.x.ai/?q= (legacy)</label>
           </fieldset>
           <label class="checkbox-row">
             <input type="checkbox" id="copy-on-open" checked />

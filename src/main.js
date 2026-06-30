@@ -1,4 +1,4 @@
-const APP_VERSION = "0.2.0";
+const APP_VERSION = "0.2.1";
 const STORAGE_KEY = "grok-link-settings";
 
 let activeHandoffId = null;
@@ -58,10 +58,11 @@ function getSelectedHost() {
 }
 
 function buildSuperGrokUrl(text) {
+  const encoded = encodeURIComponent(text);
   if (getSelectedHost() === "xai") {
-    return `https://grok.x.ai/?q=${encodeURIComponent(text)}`;
+    return `https://grok.x.ai/?q=${encoded}`;
   }
-  return "https://grok.com/";
+  return `https://grok.com/?q=${encoded}`;
 }
 
 function formatHandoffMeta(item) {
@@ -201,8 +202,8 @@ async function openSuperGrok() {
     setStatus(
       "status",
       copied
-        ? `Opened ${host}. Full message copied to clipboard.`
-        : `Opened ${host}.`
+        ? `Opened ${host} with ?q= prefill. Clipboard backup copied.`
+        : `Opened ${host} with ?q= prefill.`
     );
   } catch (e) {
     setStatus("status", `Could not open browser: ${e.message || e}`, true);

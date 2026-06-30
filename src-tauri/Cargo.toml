@@ -1,6 +1,6 @@
 [package]
 name = "grok-link"
-version = "0.2.0"
+version = "0.2.1"
 description = "Grok Link - bridge between Grok Build and SuperGrok"
 authors = ["Zachary H. Roberts"]
 edition = "2021"
