@@ -2,6 +2,14 @@
 
 All notable changes to Grok Link are documented here.
 
+## [0.5.1] - 2026-06-30
+
+### Changed
+- Full plain-English setup guide: what Grok Link does, visual flow, and 4 numbered setup steps
+- Step-by-step Tampermonkey and script install instructions (with confirm buttons)
+- Setup progress bar; guide stays visible until user finishes setup
+- "Finish later" banner + reopen guide anytime; blocks Open SuperGrok until setup complete
+
 ## [0.5.0] - 2026-06-30
 
 ### Added

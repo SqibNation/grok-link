@@ -393,6 +393,224 @@ kbd {
   font-size: 0.95rem;
 }
 
+.panel-note-tight {
+  margin: 0.15rem 0 0;
+}
+
+/* Setup banner */
+.setup-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 0.85rem;
+  border: 1px solid #854d0e;
+  background: #1c1910;
+  color: #fde68a;
+  font-size: 0.88rem;
+}
+
+.setup-banner p {
+  margin: 0;
+}
+
+/* Explain / flow */
+.explain-box {
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.1rem;
+  border-radius: 0.85rem;
+  border: 1px solid #27272a;
+  background: #0c0c0e;
+}
+
+.explain-box--compact {
+  margin: 0.75rem 0 0;
+  padding: 0.85rem;
+}
+
+.explain-lead {
+  margin: 0 0 0.75rem;
+  font-size: 0.92rem;
+  color: #d4d4d8;
+  line-height: 1.55;
+}
+
+.explain-foot {
+  margin: 0.85rem 0 0;
+  font-size: 0.8rem;
+  color: #71717a;
+}
+
+.flow-diagram {
+  display: grid;
+  gap: 0.35rem;
+  margin: 1rem 0 0.5rem;
+}
+
+.flow-node {
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.65rem;
+  border: 1px solid #3f3f46;
+  background: #18181b;
+}
+
+.flow-node--highlight {
+  border-color: #2563eb;
+  background: #172554;
+}
+
+.flow-who {
+  display: block;
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+.flow-what {
+  display: block;
+  font-size: 0.8rem;
+  color: #a1a1aa;
+  margin-top: 0.15rem;
+}
+
+.flow-arrow {
+  text-align: center;
+  color: #52525b;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* Guide progress */
+.guide-progress-wrap {
+  margin-bottom: 1rem;
+}
+
+.guide-progress-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #a1a1aa;
+  margin-bottom: 0.4rem;
+}
+
+.guide-progress-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: #27272a;
+  overflow: hidden;
+}
+
+.guide-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #166534, #34d399);
+  transition: width 0.35s ease;
+}
+
+/* Guide steps */
+.guide-steps {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.guide-step {
+  border: 1px solid #27272a;
+  border-radius: 0.85rem;
+  background: #0f0f11;
+  overflow: hidden;
+}
+
+.guide-step.done {
+  border-color: #166534;
+}
+
+.guide-step.done > summary {
+  color: #86efac;
+}
+
+.guide-step summary {
+  cursor: pointer;
+  padding: 0.8rem 1rem;
+  font-weight: 600;
+  font-size: 0.92rem;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.guide-step summary::-webkit-details-marker {
+  display: none;
+}
+
+.guide-step-badge {
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: #27272a;
+  color: #e4e4e7;
+  flex-shrink: 0;
+}
+
+.guide-step-badge.done {
+  background: #166534;
+  color: #fff;
+}
+
+.guide-step-body {
+  padding: 0 1rem 1rem;
+  font-size: 0.88rem;
+  color: #d4d4d8;
+}
+
+.guide-step-body p {
+  margin: 0 0 0.65rem;
+  line-height: 1.5;
+}
+
+.guide-done-note {
+  color: #86efac !important;
+  font-weight: 600;
+  margin-top: 0.5rem !important;
+}
+
+.plain-list,
+.numbered-steps {
+  margin: 0.5rem 0 0.85rem;
+  padding-left: 1.25rem;
+  line-height: 1.55;
+  color: #a1a1aa;
+}
+
+.numbered-steps li {
+  margin-bottom: 0.35rem;
+}
+
+.confirm-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin: 0.85rem 0;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.confirm-row input {
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+}
+
+.how-collapsed summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
 .field-label {
   display: block;
   margin-bottom: 0.45rem;

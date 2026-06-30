@@ -1,7 +1,8 @@
 const STORAGE_KEY = "grok-link-settings";
 
 let activeHandoffId = null;
-let appVersion = "0.5.0";
+let appVersion = "0.5.1";
+let bridgeOk = false;
 
 async function tauriInvoke(cmd, args = {}) {
   if (window.__TAURI__?.core?.invoke) {
@@ -29,6 +30,20 @@ function saveSettings(patch) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...getSettings(), ...patch }));
 }
 
+function isSetupComplete() {
+  return !!getSettings().setupComplete;
+}
+
+function setupProgress() {
+  const s = getSettings();
+  let done = 0;
+  if (bridgeOk) done += 1;
+  if (s.tampermonkeyInstalled) done += 1;
+  if (s.browserBridgeStarted) done += 1;
+  if (s.browserBridgeConfirmed) done += 1;
+  return { done, total: 4 };
+}
+
 function setStatus(elId, message, isError = false) {
   const el = document.getElementById(elId);
   if (!el) return;
@@ -47,7 +62,7 @@ function showToast(message, kind = "info") {
   setTimeout(() => {
     el.classList.remove("toast--visible");
     setTimeout(() => el.remove(), 300);
-  }, 4500);
+  }, 5000);
 }
 
 function updateHeroState(mode, title, subtitle) {
@@ -59,36 +74,140 @@ function updateHeroState(mode, title, subtitle) {
   if (subEl) subEl.textContent = subtitle;
 }
 
-function updateSetupSteps(items, bridgeOk) {
-  const stepBridge = document.getElementById("step-bridge");
-  const stepBrowser = document.getElementById("step-browser");
-  const stepReady = document.getElementById("step-ready");
-  const browserDone = !!getSettings().browserBridgeStarted;
+function renderGuideUI() {
+  const complete = isSetupComplete();
+  const { done, total } = setupProgress();
+  const s = getSettings();
 
-  if (stepBridge) stepBridge.classList.toggle("done", bridgeOk);
-  if (stepBrowser) stepBrowser.classList.toggle("done", browserDone);
-  if (stepReady) {
-    const hasPending = items.some((h) => h.status === "pending" || h.status === "sent");
-    const hasAnswered = items.some((h) => h.status === "answered");
-    stepReady.classList.toggle("done", bridgeOk && browserDone && (hasPending || hasAnswered));
+  const guide = document.getElementById("setup-guide");
+  const collapsed = document.getElementById("how-it-works-collapsed");
+  const banner = document.getElementById("setup-banner");
+  const showGuideBtn = document.getElementById("show-guide-btn");
+  const collapseBtn = document.getElementById("collapse-guide-btn");
+
+  if (guide) guide.classList.toggle("hidden", complete && getSettings().guideCollapsed);
+  if (collapsed) collapsed.classList.toggle("hidden", !complete);
+  if (banner) {
+    const showBanner = !complete && getSettings().guideCollapsed;
+    banner.classList.toggle("hidden", !showBanner);
+  }
+  if (showGuideBtn) showGuideBtn.classList.toggle("hidden", !complete && !getSettings().guideCollapsed);
+  if (collapseBtn) collapseBtn.classList.toggle("hidden", complete);
+
+  const progressText = document.getElementById("guide-progress-text");
+  const progressFill = document.getElementById("guide-progress-fill");
+  const progressBar = document.querySelector(".guide-progress-bar");
+  if (progressText) {
+    progressText.textContent =
+      complete
+        ? "Setup complete — you're ready to use Grok Link"
+        : `Setup: ${done} of ${total} steps done`;
+  }
+  if (progressFill) progressFill.style.width = `${Math.round((done / total) * 100)}%`;
+  if (progressBar) progressBar.setAttribute("aria-valuenow", String(done));
+
+  const steps = [
+    { id: 1, done: bridgeOk },
+    { id: 2, done: !!s.tampermonkeyInstalled },
+    { id: 3, done: !!s.browserBridgeStarted },
+    { id: 4, done: !!s.browserBridgeConfirmed },
+  ];
+
+  steps.forEach(({ id, done: stepDone }) => {
+    const el = document.getElementById(`guide-step-${id}`);
+    const badge = document.getElementById(`badge-step-${id}`);
+    if (el) el.classList.toggle("done", stepDone);
+    if (badge) {
+      badge.textContent = stepDone ? "✓" : String(id);
+      badge.classList.toggle("done", stepDone);
+    }
+  });
+
+  const confirmBox = document.getElementById("confirm-bridge-checkbox");
+  const completeBtn = document.getElementById("complete-setup-btn");
+  if (confirmBox) confirmBox.checked = !!s.browserBridgeConfirmed;
+  if (completeBtn) {
+    completeBtn.disabled = !confirmBox?.checked;
   }
 
-  const pill = document.getElementById("bridge-setup-pill");
-  if (pill) {
-    if (browserDone) {
-      pill.textContent = "Setup started";
-      pill.className = "pill pill-ok";
-    } else {
-      pill.textContent = "Not set up";
-      pill.className = "pill pill-muted";
-    }
+  if (!complete && bridgeOk) {
+    const next = !s.tampermonkeyInstalled
+      ? "guide-step-2"
+      : !s.browserBridgeStarted
+        ? "guide-step-3"
+        : "guide-step-4";
+    document.querySelectorAll(".guide-step:not(.guide-step--daily)").forEach((d) => {
+      d.open = d.id === next;
+    });
+  }
+
+  if (complete) {
+    updateHeroState(
+      "ready",
+      "Setup complete",
+      "Grok Link is ready. When Grok Build sends a question, it will appear below."
+    );
   }
 }
 
-function toggleOnboarding(show) {
-  const panel = document.getElementById("onboarding");
-  if (!panel) return;
-  panel.classList.toggle("hidden", !show);
+function showFullGuide() {
+  saveSettings({ guideCollapsed: false, setupComplete: false });
+  const collapsed = document.getElementById("how-it-works-collapsed");
+  const guide = document.getElementById("setup-guide");
+  if (collapsed) collapsed.classList.add("hidden");
+  if (guide) guide.classList.remove("hidden");
+  renderGuideUI();
+  guide?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function collapseGuideLater() {
+  saveSettings({ guideCollapsed: true });
+  renderGuideUI();
+  showToast("Setup guide hidden — use “Setup guide” in the header to continue", "info");
+}
+
+function finishSetup() {
+  if (!document.getElementById("confirm-bridge-checkbox")?.checked) {
+    showToast("Check the box to confirm you've enabled the script on grok.com", "info");
+    return;
+  }
+  saveSettings({
+    browserBridgeConfirmed: true,
+    setupComplete: true,
+    guideCollapsed: true,
+  });
+  renderGuideUI();
+  showToast("You're all set! Grok Build and SuperGrok can now work together.", "success");
+}
+
+async function openTampermonkey() {
+  try {
+    await tauriInvoke("open_in_browser", { url: "https://www.tampermonkey.net/" });
+    showToast("Install Tampermonkey for your browser, then click “I've installed Tampermonkey”", "info");
+  } catch (e) {
+    showToast(`Could not open browser: ${e.message || e}`, "info");
+  }
+}
+
+function confirmTampermonkey() {
+  saveSettings({ tampermonkeyInstalled: true });
+  renderGuideUI();
+  showToast("Great — next, add the Grok Link script (Step 3)", "success");
+  document.getElementById("guide-step-3")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+async function installBrowserBridge() {
+  try {
+    const path = await tauriInvoke("install_browser_bridge");
+    saveSettings({ browserBridgeStarted: true });
+    const hint = document.getElementById("script-path-hint");
+    if (hint) hint.textContent = `Script file: ${path}`;
+    renderGuideUI();
+    showToast("Copy the script from Notepad into Tampermonkey (see Step 3)", "info");
+    document.getElementById("guide-step-4")?.open = true;
+  } catch (e) {
+    showToast(`Could not open script: ${e.message || e}`, "info");
+  }
 }
 
 function getPromptRaw() {
@@ -117,36 +236,21 @@ function buildSuperGrokUrl(text, handoffId = activeHandoffId) {
   const base =
     getSelectedHost() === "xai" ? "https://grok.x.ai/" : "https://grok.com/";
   let url = `${base}?q=${encoded}`;
-  if (handoffId) {
-    url += `#grok-link-id=${handoffId}`;
-  }
+  if (handoffId) url += `#grok-link-id=${handoffId}`;
   return url;
 }
 
 function statusLabel(status) {
-  const map = {
-    pending: "New",
-    sent: "Opened",
-    answered: "Done",
-  };
-  return map[status] || status;
+  return { pending: "New", sent: "Opened", answered: "Done" }[status] || status;
 }
 
 function statusClass(status) {
-  const map = {
-    pending: "pill-warn",
-    sent: "pill-info",
-    answered: "pill-ok",
-  };
-  return map[status] || "pill-muted";
+  return { pending: "pill-warn", sent: "pill-info", answered: "pill-ok" }[status] || "pill-muted";
 }
 
 function formatHandoffMeta(item) {
-  const when = item.created_at
-    ? new Date(item.created_at * 1000).toLocaleString()
-    : "";
-  const task = item.task ? item.task : "Handoff";
-  return `${task} · ${when}`;
+  const when = item.created_at ? new Date(item.created_at * 1000).toLocaleString() : "";
+  return `${item.task || "Message"} · ${when}`;
 }
 
 function renderHandoffQueue(items) {
@@ -154,45 +258,35 @@ function renderHandoffQueue(items) {
   if (!root) return;
 
   if (!items.length) {
-    root.innerHTML =
-      '<p class="empty-note">No messages yet. When Grok Build sends a handoff, it will appear here.</p>';
-    updateHeroState(
-      "ready",
-      "Ready and waiting",
-      "Grok Link is running in the background. New messages from Grok Build will show up here."
-    );
+    root.innerHTML = isSetupComplete()
+      ? '<p class="empty-note">No messages yet. When Grok Build needs SuperGrok, a question will appear here.</p>'
+      : '<p class="empty-note">No messages yet. Finish setup above first, then Grok Build can send questions here.</p>';
+    if (!isSetupComplete()) {
+      updateHeroState("ready", "Finish setup first", "Complete the guide above so replies sync back automatically.");
+    } else {
+      updateHeroState("ready", "Ready and waiting", "Grok Link is running. New questions from Grok Build will show up here.");
+    }
+    renderGuideUI();
     return;
   }
 
   const pending = items.filter((h) => h.status === "pending").length;
-  const answered = items.filter((h) => h.status === "answered").length;
 
   if (pending > 0) {
     updateHeroState(
       "active",
-      `${pending} new message${pending === 1 ? "" : "s"}`,
-      "Select one below, then click Open SuperGrok."
+      `${pending} new question${pending === 1 ? "" : "s"}`,
+      "Click one below, then press Open SuperGrok."
     );
-  } else if (answered > 0) {
-    updateHeroState(
-      "ready",
-      "All caught up",
-      "Latest replies are saved for Grok Build. You can close this window — Grok Link stays in the tray."
-    );
-  } else {
-    updateHeroState(
-      "ready",
-      "Ready",
-      "Pick a message below to continue in SuperGrok."
-    );
+  } else if (isSetupComplete()) {
+    updateHeroState("ready", "All caught up", "Latest answers are saved for Grok Build.");
   }
 
   root.innerHTML = "";
   items.forEach((item) => {
     const card = document.createElement("button");
     card.type = "button";
-    card.className =
-      "handoff-card" + (item.id === activeHandoffId ? " active" : "");
+    card.className = "handoff-card" + (item.id === activeHandoffId ? " active" : "");
     card.innerHTML = `
       <div class="handoff-card-top">
         <span class="handoff-card-title">${escapeHtml(item.task || "Message")}</span>
@@ -204,6 +298,7 @@ function renderHandoffQueue(items) {
     card.onclick = () => selectHandoff(item);
     root.appendChild(card);
   });
+  renderGuideUI();
 }
 
 function escapeHtml(value) {
@@ -215,14 +310,11 @@ function escapeHtml(value) {
 
 function selectHandoff(item, quiet = false) {
   activeHandoffId = item.id;
-  const prompt = document.getElementById("prompt");
-  const context = document.getElementById("context");
-  const response = document.getElementById("response");
-  if (prompt) prompt.value = item.message || "";
-  if (context) context.value = item.context || "";
-  if (response) response.value = item.response || "";
+  document.getElementById("prompt").value = item.message || "";
+  document.getElementById("context").value = item.context || "";
+  document.getElementById("response").value = item.response || "";
   if (!quiet) {
-    setStatus("status", `Loaded "${item.task || "message"}". Click Open SuperGrok when ready.`);
+    setStatus("status", `Loaded "${item.task || "question"}". Click Open SuperGrok when ready.`);
   }
   void refreshQueue();
 }
@@ -238,14 +330,15 @@ function pickLatestActionable(items) {
 async function refreshQueue() {
   try {
     const items = await tauriInvoke("list_handoffs");
+    bridgeOk = true;
     renderHandoffQueue(items || []);
-    updateSetupSteps(items || [], true);
     setBridgeOnline(true);
     return items || [];
   } catch (e) {
+    bridgeOk = false;
     setBridgeOnline(false, e.message || String(e));
-    updateHeroState("error", "Bridge offline", "Try restarting Grok Link from the desktop shortcut.");
-    updateSetupSteps([], false);
+    updateHeroState("error", "Grok Link isn't responding", "Try the desktop shortcut or restart from the system tray.");
+    renderGuideUI();
     return [];
   }
 }
@@ -255,10 +348,10 @@ function setBridgeOnline(ok, detail = "") {
   if (!el) return;
   if (ok) {
     const port = document.getElementById("bridge-port")?.textContent || "3877";
-    el.textContent = `Technical: bridge online at http://127.0.0.1:${port}/api/handoff`;
+    el.textContent = `Connection OK (local port ${port}). Not exposed to the internet.`;
     el.classList.remove("error");
   } else {
-    el.textContent = `Bridge offline${detail ? `: ${detail}` : ""}`;
+    el.textContent = `Connection problem${detail ? `: ${detail}` : ""}`;
     el.classList.add("error");
   }
 }
@@ -296,20 +389,22 @@ async function writeClipboard(text) {
 async function pasteFromClipboard() {
   try {
     const text = await readClipboard();
-    const prompt = document.getElementById("prompt");
-    if (prompt) prompt.value = text || "";
+    document.getElementById("prompt").value = text || "";
     setStatus("status", text ? "Pasted from clipboard." : "Clipboard is empty.", !text);
-    return !!text;
   } catch {
     setStatus("status", "Could not read clipboard.", true);
-    return false;
   }
 }
 
 async function openSuperGrok() {
   const composed = composeSuperGrokMessage();
   if (!composed) {
-    setStatus("status", "Enter a message first, or select one from Grok Build.", true);
+    setStatus("status", "Select a message from Grok Build first, or type a question.", true);
+    return;
+  }
+  if (!isSetupComplete()) {
+    setStatus("status", "Finish setup first so SuperGrok's answer syncs back automatically.", true);
+    showFullGuide();
     return;
   }
 
@@ -322,15 +417,10 @@ async function openSuperGrok() {
       await tauriInvoke("mark_handoff_sent", { id: activeHandoffId });
       await refreshQueue();
     }
-    const host = getSelectedHost() === "xai" ? "grok.x.ai" : "grok.com";
-    const linkNote = activeHandoffId
-      ? " Reply will auto-sync if the browser bridge is installed."
-      : "";
     setStatus(
       "status",
-      (copied
-        ? `Opened ${host}. Clipboard backup copied.`
-        : `Opened ${host}.`) + linkNote
+      (copied ? "Opened SuperGrok. Question copied to clipboard too. " : "Opened SuperGrok. ") +
+        "Answer in the browser — Grok Build will get it automatically."
     );
     showToast("SuperGrok opened in your browser", "success");
   } catch (e) {
@@ -345,13 +435,13 @@ async function submitResponse() {
   }
   const text = (document.getElementById("response")?.value || "").trim();
   if (!text) {
-    setStatus("response-status", "Paste SuperGrok's reply first.", true);
+    setStatus("response-status", "Paste SuperGrok's answer first.", true);
     return;
   }
   try {
     await tauriInvoke("submit_handoff_response", { id: activeHandoffId, response: text });
-    setStatus("response-status", "Saved. Grok Build can pick this up automatically.");
-    showToast("Reply saved for Grok Build", "success");
+    setStatus("response-status", "Saved. Grok Build can read this answer now.");
+    showToast("Answer saved for Grok Build", "success");
     await refreshQueue();
   } catch (e) {
     setStatus("response-status", `Save failed: ${e.message || e}`, true);
@@ -361,7 +451,7 @@ async function submitResponse() {
 async function hideToTray() {
   try {
     await tauriInvoke("hide_to_tray");
-    showToast("Running in the system tray. Click the icon to reopen.", "info");
+    showToast("Grok Link is in the system tray. Click the icon near the clock to reopen.", "info");
   } catch (e) {
     setStatus("status", `Could not hide: ${e.message || e}`, true);
   }
@@ -374,8 +464,7 @@ function bindOptionsPersistence() {
     if (radio) radio.checked = true;
   }
   if (typeof saved.copyOnOpen === "boolean") {
-    const copy = document.getElementById("copy-on-open");
-    if (copy) copy.checked = saved.copyOnOpen;
+    document.getElementById("copy-on-open").checked = saved.copyOnOpen;
   }
   document.querySelectorAll('input[name="grok-host"]').forEach((el) => {
     el.addEventListener("change", () => saveSettings({ host: getSelectedHost() }));
@@ -385,57 +474,44 @@ function bindOptionsPersistence() {
   });
 }
 
-async function installBrowserBridge() {
-  try {
-    const path = await tauriInvoke("install_browser_bridge");
-    saveSettings({ browserBridgeStarted: true });
-    updateSetupSteps(await refreshQueue(), true);
-    setStatus(
-      "bridge-install-status",
-      "Tampermonkey and the script file are open. In Tampermonkey: Create script → paste → save → enable on grok.com."
-    );
-    showToast("Follow the Tampermonkey steps — one-time setup", "info");
-  } catch (e) {
-    setStatus(
-      "bridge-install-status",
-      `Could not open installer: ${e.message || e}. Try .\\scripts\\Install-BrowserBridge.ps1`,
-      true
-    );
-  }
-}
-
 async function initMeta() {
   try {
     appVersion = await tauriInvoke("app_version");
-    const badge = document.getElementById("version-badge");
-    if (badge) badge.textContent = `v${appVersion}`;
+    document.getElementById("version-badge").textContent = `v${appVersion}`;
   } catch {
-    const badge = document.getElementById("version-badge");
-    if (badge) badge.textContent = "v0.5.0";
+    document.getElementById("version-badge").textContent = "v0.5.1";
   }
-
   try {
     const port = await tauriInvoke("bridge_port");
-    const portEl = document.getElementById("bridge-port");
-    if (portEl) portEl.textContent = String(port);
-  } catch {
-    /* keep default */
-  }
-
+    document.getElementById("bridge-port").textContent = String(port);
+  } catch { /* default */ }
   try {
     const dir = await tauriInvoke("data_dir_path");
     const hint = document.getElementById("data-dir-hint");
     if (hint && dir) hint.textContent = dir;
-  } catch {
-    /* keep default */
-  }
+  } catch { /* default */ }
+}
+
+function bindGuideEvents() {
+  document.getElementById("open-tampermonkey-btn")?.addEventListener("click", () => void openTampermonkey());
+  document.getElementById("confirm-tampermonkey-btn")?.addEventListener("click", confirmTampermonkey);
+  document.getElementById("guide-install-script-btn")?.addEventListener("click", () => void installBrowserBridge());
+  document.getElementById("complete-setup-btn")?.addEventListener("click", finishSetup);
+  document.getElementById("collapse-guide-btn")?.addEventListener("click", collapseGuideLater);
+  document.getElementById("show-guide-btn")?.addEventListener("click", showFullGuide);
+  document.getElementById("banner-show-guide-btn")?.addEventListener("click", showFullGuide);
+  document.getElementById("reopen-full-guide-btn")?.addEventListener("click", showFullGuide);
+
+  document.getElementById("confirm-bridge-checkbox")?.addEventListener("change", (e) => {
+    saveSettings({ browserBridgeConfirmed: e.target.checked });
+    document.getElementById("complete-setup-btn").disabled = !e.target.checked;
+    renderGuideUI();
+  });
 }
 
 async function init() {
-  const showOnboarding = !getSettings().onboardingDismissed;
-  toggleOnboarding(showOnboarding);
-
   bindOptionsPersistence();
+  bindGuideEvents();
   await initMeta();
 
   document.getElementById("open-btn")?.addEventListener("click", () => void openSuperGrok());
@@ -449,14 +525,7 @@ async function init() {
   });
   document.getElementById("refresh-queue-btn")?.addEventListener("click", () => void refreshQueue());
   document.getElementById("submit-response-btn")?.addEventListener("click", () => void submitResponse());
-  document.getElementById("install-bridge-btn")?.addEventListener("click", () => void installBrowserBridge());
-  document.getElementById("onboarding-install-btn")?.addEventListener("click", () => void installBrowserBridge());
   document.getElementById("hide-tray-btn")?.addEventListener("click", () => void hideToTray());
-  document.getElementById("dismiss-onboarding-btn")?.addEventListener("click", () => {
-    saveSettings({ onboardingDismissed: true });
-    toggleOnboarding(false);
-  });
-
   document.getElementById("prompt")?.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
@@ -469,20 +538,26 @@ async function init() {
     const next = pickLatestActionable(items);
     if (next?.status === "pending") {
       selectHandoff(next, true);
-      showToast(`New message from Grok Build: ${next.task || "handoff"}`, "info");
+      showToast(`New question from Grok Build: ${next.task || "handoff"}`, "info");
     }
   });
 
   await tauriListen("handoff-answered", async () => {
     await refreshQueue();
-    showToast("Reply synced — Grok Build can continue", "success");
+    showToast("Answer synced — Grok Build can continue", "success");
   });
 
   await tauriInvoke("refresh_inbox").catch(() => {});
   const items = await refreshQueue();
+  renderGuideUI();
+
   const next = pickLatestActionable(items);
   if (next?.status === "pending" && !activeHandoffId) {
     selectHandoff(next, true);
+  }
+
+  if (!isSetupComplete() && !getSettings().guideCollapsed) {
+    showToast("New here? Start with the setup guide above.", "info");
   }
 }
 

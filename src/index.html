@@ -14,117 +14,229 @@
       <header class="header">
         <div class="header-row">
           <h1>Grok Link</h1>
-          <span id="version-badge" class="version-badge">v0.5.0</span>
+          <span id="version-badge" class="version-badge">v0.5.1</span>
+          <button type="button" id="show-guide-btn" class="btn btn-small btn-ghost hidden">Setup guide</button>
         </div>
-        <p class="subtitle">Your bridge between <strong>Grok Build</strong> (IDE) and <strong>SuperGrok</strong> (browser).</p>
       </header>
+
+      <section id="setup-banner" class="setup-banner hidden">
+        <p><strong>Setup not finished yet.</strong> Complete the guide below so SuperGrok replies sync back automatically.</p>
+        <button type="button" id="banner-show-guide-btn" class="btn btn-small">Open setup guide</button>
+      </section>
 
       <section id="status-hero" class="status-hero">
         <span id="status-dot" class="status-dot" aria-hidden="true"></span>
         <div class="status-hero-text">
           <strong id="status-title">Starting…</strong>
-          <p id="status-subtitle">Checking the local bridge.</p>
+          <p id="status-subtitle">Checking that Grok Link is ready.</p>
         </div>
         <button type="button" id="hide-tray-btn" class="btn btn-small">Hide to tray</button>
       </section>
 
-      <section id="onboarding" class="panel onboarding hidden">
+      <!-- Setup guide: shown until user completes setup -->
+      <section id="setup-guide" class="panel guide">
         <div class="panel-head">
-          <h2>Get started</h2>
-          <button type="button" id="dismiss-onboarding-btn" class="btn btn-small btn-ghost">Dismiss</button>
+          <div>
+            <h2>What Grok Link does</h2>
+            <p class="panel-note panel-note-tight">Plain English overview and one-time setup.</p>
+          </div>
+          <button type="button" id="collapse-guide-btn" class="btn btn-small btn-ghost hidden">Finish later</button>
         </div>
-        <p class="panel-note">Three quick steps — then Grok Build and SuperGrok stay in sync automatically.</p>
-        <ol class="setup-steps">
-          <li id="step-bridge" class="setup-step">
-            <span class="setup-step-icon">1</span>
-            <div>
-              <strong>Keep Grok Link running</strong>
-              <p>It lives in your system tray. Closing this window does <em>not</em> quit the app.</p>
+
+        <div class="explain-box">
+          <p class="explain-lead">
+            You have two Grok assistants. <strong>Grok Build</strong> lives in your code editor and writes code with you.
+            <strong>SuperGrok</strong> lives in your web browser and can browse the web and use features the IDE does not have.
+          </p>
+          <p class="explain-lead">
+            <strong>Grok Link is the messenger between them.</strong> When Grok Build needs SuperGrok's help, it sends the
+            question here. You open SuperGrok, get the answer, and Grok Build picks it up — so both sides stay on the same page.
+          </p>
+          <div class="flow-diagram" aria-label="How messages flow">
+            <div class="flow-node">
+              <span class="flow-who">Grok Build</span>
+              <span class="flow-what">Sends a question from your IDE</span>
             </div>
-          </li>
-          <li id="step-browser" class="setup-step">
-            <span class="setup-step-icon">2</span>
-            <div>
-              <strong>Set up auto-sync (one time)</strong>
-              <p>Install the browser bridge so SuperGrok replies flow back to Grok Build.</p>
-              <button type="button" id="onboarding-install-btn" class="btn btn-small">Install browser bridge</button>
+            <div class="flow-arrow" aria-hidden="true">↓</div>
+            <div class="flow-node flow-node--highlight">
+              <span class="flow-who">Grok Link</span>
+              <span class="flow-what">Shows the question here (this app)</span>
             </div>
-          </li>
-          <li id="step-ready" class="setup-step">
-            <span class="setup-step-icon">3</span>
-            <div>
-              <strong>Use it from Grok Build</strong>
-              <p>When Grok Build hands off a question, pick it below and click <strong>Open SuperGrok</strong>.</p>
+            <div class="flow-arrow" aria-hidden="true">↓</div>
+            <div class="flow-node">
+              <span class="flow-who">SuperGrok</span>
+              <span class="flow-what">You answer in the browser at grok.com</span>
             </div>
-          </li>
-        </ol>
+            <div class="flow-arrow" aria-hidden="true">↓</div>
+            <div class="flow-node">
+              <span class="flow-who">Grok Build again</span>
+              <span class="flow-what">Gets the answer and continues your project</span>
+            </div>
+          </div>
+          <p class="explain-foot">Nothing leaves your PC except what you send to grok.com in the browser. Grok Link only talks to your computer.</p>
+        </div>
+
+        <div class="guide-progress-wrap">
+          <div class="guide-progress-label">
+            <span id="guide-progress-text">Setup: 1 of 4 steps done</span>
+          </div>
+          <div class="guide-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="1">
+            <div id="guide-progress-fill" class="guide-progress-fill" style="width: 25%"></div>
+          </div>
+        </div>
+
+        <div class="guide-steps">
+          <details id="guide-step-1" class="guide-step" open>
+            <summary><span class="guide-step-badge" id="badge-step-1">1</span> Grok Link is running on your PC</summary>
+            <div class="guide-step-body">
+              <p>You're looking at it. <strong>You do not need to keep this window open.</strong></p>
+              <ul class="plain-list">
+                <li>Closing the window hides Grok Link to your <strong>system tray</strong> (near the clock).</li>
+                <li>The messenger keeps working in the background.</li>
+                <li>Click the tray icon anytime to open this window again.</li>
+                <li>It also starts when you sign in to Windows.</li>
+              </ul>
+              <p class="guide-done-note" id="note-step-1">✓ This step is already done.</p>
+            </div>
+          </details>
+
+          <details id="guide-step-2" class="guide-step" open>
+            <summary><span class="guide-step-badge" id="badge-step-2">2</span> Install Tampermonkey in your browser</summary>
+            <div class="guide-step-body">
+              <p>Tampermonkey is a free browser extension. It runs a tiny helper on <code>grok.com</code> so SuperGrok's reply can find its way back to Grok Build — without you copying and pasting.</p>
+              <ol class="numbered-steps">
+                <li>Click <strong>Open Tampermonkey</strong> below.</li>
+                <li>Install the extension for <strong>Chrome</strong>, <strong>Edge</strong>, or <strong>Firefox</strong> (pick your browser).</li>
+                <li>After install, you should see the Tampermonkey icon in your browser toolbar.</li>
+              </ol>
+              <div class="actions">
+                <button type="button" id="open-tampermonkey-btn" class="btn btn-primary">Open Tampermonkey</button>
+                <button type="button" id="confirm-tampermonkey-btn" class="btn">I've installed Tampermonkey</button>
+              </div>
+            </div>
+          </details>
+
+          <details id="guide-step-3" class="guide-step">
+            <summary><span class="guide-step-badge" id="badge-step-3">3</span> Add the Grok Link helper script</summary>
+            <div class="guide-step-body">
+              <p>This is a one-time copy-and-paste into Tampermonkey.</p>
+              <ol class="numbered-steps">
+                <li>Click <strong>Open script file</strong> — Notepad opens with the script.</li>
+                <li>In Notepad: press <kbd>Ctrl</kbd>+<kbd>A</kbd> (select all), then <kbd>Ctrl</kbd>+<kbd>C</kbd> (copy).</li>
+                <li>Click the Tampermonkey icon → <strong>Dashboard</strong>.</li>
+                <li>Click the <strong>+</strong> tab or <strong>Create a new script</strong>.</li>
+                <li>Delete any template text in the editor, then press <kbd>Ctrl</kbd>+<kbd>V</kbd> (paste).</li>
+                <li>Save: <kbd>Ctrl</kbd>+<kbd>S</kbd> or File → Save.</li>
+                <li>Make sure the script toggle is <strong>ON</strong> (enabled).</li>
+              </ol>
+              <div class="actions">
+                <button type="button" id="guide-install-script-btn" class="btn btn-primary">Open script file</button>
+              </div>
+              <p id="script-path-hint" class="hint"></p>
+            </div>
+          </details>
+
+          <details id="guide-step-4" class="guide-step">
+            <summary><span class="guide-step-badge" id="badge-step-4">4</span> Confirm everything works</summary>
+            <div class="guide-step-body">
+              <p>Quick checklist before you use it with Grok Build:</p>
+              <ul class="plain-list">
+                <li>Tampermonkey is installed and the Grok Link script is <strong>enabled</strong>.</li>
+                <li>When you open a question in SuperGrok, a small badge appears at the bottom-right of <code>grok.com</code>.</li>
+                <li>A <strong>green</strong> badge means the reply was sent back to Grok Build.</li>
+              </ul>
+              <label class="confirm-row">
+                <input type="checkbox" id="confirm-bridge-checkbox" />
+                <span>I've completed the steps above and enabled the script on grok.com</span>
+              </label>
+              <div class="actions">
+                <button type="button" id="complete-setup-btn" class="btn btn-primary" disabled>Finish setup</button>
+              </div>
+            </div>
+          </details>
+
+          <details id="guide-step-daily" class="guide-step guide-step--daily">
+            <summary><span class="guide-step-badge">★</span> How you'll use it day to day</summary>
+            <div class="guide-step-body">
+              <ol class="numbered-steps">
+                <li><strong>Grok Build</strong> sends a question → it appears under <em>Messages from Grok Build</em> below.</li>
+                <li>Click the message, review it, then click <strong>Open SuperGrok</strong>.</li>
+                <li>Answer in SuperGrok in your browser (same as you normally would).</li>
+                <li>Grok Build reads the answer automatically and continues in your project.</li>
+              </ol>
+              <p class="explain-foot">If auto-sync isn't working, you can still paste SuperGrok's reply manually in the <em>Manual reply</em> section.</p>
+            </div>
+          </details>
+        </div>
       </section>
 
-      <section class="panel">
-        <div class="panel-head">
-          <h2>Messages from Grok Build</h2>
-          <button type="button" id="refresh-queue-btn" class="btn btn-small">Refresh</button>
+      <!-- Collapsed "how it works" after setup complete -->
+      <details id="how-it-works-collapsed" class="panel how-collapsed hidden">
+        <summary>How Grok Link works</summary>
+        <div class="explain-box explain-box--compact">
+          <p>Grok Build (IDE) → Grok Link (this app) → SuperGrok (browser) → answer back to Grok Build. Data stays on your PC.</p>
+          <button type="button" id="reopen-full-guide-btn" class="btn btn-small">Reopen full setup guide</button>
         </div>
-        <div id="handoff-queue" class="handoff-queue">
-          <p class="empty-note">No messages yet. When Grok Build sends a handoff, it will appear here.</p>
-        </div>
-      </section>
+      </details>
 
-      <section class="panel panel-primary">
-        <h2>Open in SuperGrok</h2>
-        <p class="panel-note">Select a message above, review it, then open SuperGrok. With the browser bridge, the reply syncs back on its own.</p>
-        <label class="field-label" for="prompt">Message</label>
-        <textarea id="prompt" class="prompt" rows="8" placeholder="A handoff from Grok Build appears here…"></textarea>
-        <label class="field-label" for="context">Extra context <span class="label-optional">(optional)</span></label>
-        <textarea id="context" class="context" rows="3" placeholder="File paths, constraints, code summary…"></textarea>
-        <div class="actions actions-primary">
-          <button type="button" id="open-btn" class="btn btn-primary btn-large">Open SuperGrok</button>
-          <button type="button" id="paste-btn" class="btn">Paste from clipboard</button>
-          <button type="button" id="clear-btn" class="btn">Clear</button>
-        </div>
-        <p class="hint">Tip: <kbd>Ctrl</kbd>+<kbd>Enter</kbd> opens SuperGrok. Clipboard copy is a backup if the browser doesn't prefill.</p>
-        <p id="status" class="status" role="status" aria-live="polite"></p>
-      </section>
+      <section id="workspace" class="workspace">
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Messages from Grok Build</h2>
+            <button type="button" id="refresh-queue-btn" class="btn btn-small">Refresh</button>
+          </div>
+          <p class="panel-note">When your IDE agent needs SuperGrok, the question shows up here. Click one to work on it.</p>
+          <div id="handoff-queue" class="handoff-queue">
+            <p class="empty-note">No messages yet. After setup, Grok Build will send questions here.</p>
+          </div>
+        </section>
 
-      <section class="panel panel-bridge">
-        <h2>Browser bridge</h2>
-        <p class="panel-note">One-time Tampermonkey setup. You'll see a green badge on grok.com when a reply syncs.</p>
-        <div class="actions">
-          <button type="button" id="install-bridge-btn" class="btn">Install browser bridge</button>
-          <span id="bridge-setup-pill" class="pill pill-muted">Not confirmed</span>
-        </div>
-        <p id="bridge-install-status" class="status" role="status" aria-live="polite"></p>
-      </section>
+        <section class="panel panel-primary">
+          <h2>Open in SuperGrok</h2>
+          <p class="panel-note">Select a message above, then open it in your browser. SuperGrok will have the question ready for you.</p>
+          <label class="field-label" for="prompt">Question for SuperGrok</label>
+          <textarea id="prompt" class="prompt" rows="8" placeholder="A question from Grok Build appears here…"></textarea>
+          <label class="field-label" for="context">Background info <span class="label-optional">(optional)</span></label>
+          <textarea id="context" class="context" rows="3" placeholder="Project details Grok Build included…"></textarea>
+          <div class="actions actions-primary">
+            <button type="button" id="open-btn" class="btn btn-primary btn-large">Open SuperGrok</button>
+            <button type="button" id="paste-btn" class="btn">Paste from clipboard</button>
+            <button type="button" id="clear-btn" class="btn">Clear</button>
+          </div>
+          <p class="hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> also opens SuperGrok.</p>
+          <p id="status" class="status" role="status" aria-live="polite"></p>
+        </section>
 
-      <section class="panel">
-        <h2>Manual reply</h2>
-        <p class="panel-note">Only needed if you skipped the browser bridge. Paste SuperGrok's answer here.</p>
-        <label class="field-label" for="response">SuperGrok's reply</label>
-        <textarea id="response" class="response" rows="6" placeholder="Paste the reply…"></textarea>
-        <div class="actions">
-          <button type="button" id="submit-response-btn" class="btn">Save for Grok Build</button>
-        </div>
-        <p id="response-status" class="status" role="status" aria-live="polite"></p>
+        <section class="panel">
+          <h2>Manual reply</h2>
+          <p class="panel-note">Only if auto-sync didn't work. Copy SuperGrok's answer from the browser and paste it here.</p>
+          <label class="field-label" for="response">SuperGrok's answer</label>
+          <textarea id="response" class="response" rows="6" placeholder="Paste the answer from grok.com…"></textarea>
+          <div class="actions">
+            <button type="button" id="submit-response-btn" class="btn">Save for Grok Build</button>
+          </div>
+          <p id="response-status" class="status" role="status" aria-live="polite"></p>
+        </section>
       </section>
 
       <details class="options">
         <summary>Advanced options</summary>
         <div class="options-body">
           <fieldset class="option-group">
-            <legend>SuperGrok URL</legend>
+            <legend>SuperGrok website</legend>
             <label><input type="radio" name="grok-host" value="com" checked /> grok.com (recommended)</label>
-            <label><input type="radio" name="grok-host" value="xai" /> grok.x.ai (legacy)</label>
+            <label><input type="radio" name="grok-host" value="xai" /> grok.x.ai (older)</label>
           </fieldset>
           <label class="checkbox-row">
             <input type="checkbox" id="copy-on-open" checked />
-            Copy message to clipboard when opening SuperGrok
+            Also copy the question to clipboard when opening SuperGrok
           </label>
-          <p id="bridge-status" class="bridge-status">Bridge starting…</p>
+          <p id="bridge-status" class="bridge-status">Checking connection…</p>
         </div>
       </details>
 
       <footer class="footer">
-        <p>Runs in the background on port <span id="bridge-port">3877</span>. Data: <code id="data-dir-hint">~/.grok-link</code></p>
+        <p>Runs locally on port <span id="bridge-port">3877</span>. Your messages are stored at <code id="data-dir-hint">~/.grok-link</code></p>
       </footer>
     </main>
   </body>
