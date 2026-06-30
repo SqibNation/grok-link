@@ -1,0 +1,309 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #e4e4e7;
+  background-color: #0a0a0a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+.app {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 1.5rem;
+}
+
+.panel {
+  margin-bottom: 1.35rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid #27272a;
+  border-radius: 1rem;
+  background: #111113;
+}
+
+.panel h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.panel-head h2 {
+  margin: 0;
+}
+
+.panel-note {
+  margin: 0 0 0.75rem;
+  font-size: 0.82rem;
+  color: #71717a;
+}
+
+.bridge-status {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  color: #34d399;
+  font-family: ui-monospace, Consolas, monospace;
+}
+
+.bridge-status.error {
+  color: #f87171;
+}
+
+.handoff-queue {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.handoff-card {
+  text-align: left;
+  border: 1px solid #3f3f46;
+  border-radius: 0.85rem;
+  background: #18181b;
+  color: #e4e4e7;
+  padding: 0.75rem 0.85rem;
+  cursor: pointer;
+}
+
+.handoff-card:hover,
+.handoff-card.active {
+  border-color: #3b82f6;
+  background: #172554;
+}
+
+.handoff-card-title {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.handoff-card-meta {
+  display: block;
+  font-size: 0.72rem;
+  color: #a1a1aa;
+  margin-top: 0.2rem;
+}
+
+.handoff-card-preview {
+  display: block;
+  font-size: 0.8rem;
+  color: #d4d4d8;
+  margin-top: 0.35rem;
+  line-height: 1.35;
+}
+
+.empty-note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #71717a;
+}
+
+.btn-small {
+  padding: 0.4rem 0.7rem;
+  font-size: 0.78rem;
+}
+
+.context,
+.response {
+  width: 100%;
+  resize: vertical;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid #3f3f46;
+  border-radius: 0.85rem;
+  background: #0f0f11;
+  color: #f4f4f5;
+  font: inherit;
+  margin-bottom: 0.75rem;
+}
+
+code {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.85em;
+  color: #93c5fd;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 1.85rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.version-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #a1a1aa;
+  border: 1px solid #3f3f46;
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+}
+
+.subtitle {
+  margin: 0.5rem 0 1.35rem;
+  color: #a1a1aa;
+  font-size: 0.95rem;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #d4d4d8;
+}
+
+.prompt,
+.prefix {
+  width: 100%;
+  resize: vertical;
+  padding: 0.9rem 1rem;
+  border: 1px solid #3f3f46;
+  border-radius: 1rem;
+  background: #111113;
+  color: #f4f4f5;
+  font: inherit;
+}
+
+.prompt {
+  min-height: 220px;
+}
+
+.prefix {
+  min-height: 72px;
+}
+
+.prompt:focus,
+.prefix:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.btn {
+  border: 1px solid #3f3f46;
+  border-radius: 0.85rem;
+  background: #18181b;
+  color: #e4e4e7;
+  padding: 0.65rem 1rem;
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: #27272a;
+}
+
+.btn-primary {
+  margin-left: auto;
+  border-color: #2563eb;
+  background: #1d4ed8;
+  color: #fff;
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  background: #2563eb;
+}
+
+.hint {
+  margin: 0.55rem 0 0;
+  font-size: 0.78rem;
+  color: #71717a;
+}
+
+.status {
+  min-height: 1.25rem;
+  margin: 0.85rem 0 0;
+  font-size: 0.85rem;
+  color: #34d399;
+}
+
+.status.error {
+  color: #f87171;
+}
+
+.options {
+  margin-top: 1.35rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #27272a;
+  border-radius: 1rem;
+  background: #111113;
+}
+
+.options summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #d4d4d8;
+}
+
+.options-body {
+  margin-top: 0.85rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.option-group {
+  border: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.option-group legend {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #a1a1aa;
+  margin-bottom: 0.35rem;
+}
+
+.option-group label,
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+  color: #d4d4d8;
+}
+
+.footer {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #27272a;
+}
+
+.footer p {
+  margin: 0;
+  font-size: 0.72rem;
+  color: #52525b;
+  line-height: 1.45;
+}

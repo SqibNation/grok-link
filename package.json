@@ -1,0 +1,16 @@
+{
+  "name": "grok-link",
+  "private": true,
+  "version": "0.2.0",
+  "description": "Grok Link - bridge between Grok Build and SuperGrok",
+  "author": "Zachary H. Roberts",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "tauri": "tauri",
+    "build": "powershell -ExecutionPolicy Bypass -File scripts/build.ps1"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}

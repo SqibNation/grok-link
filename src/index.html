@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grok Link</title>
+    <script type="module" src="/main.js" defer></script>
+  </head>
+  <body>
+    <main class="app">
+      <header class="header">
+        <div class="header-row">
+          <h1>Grok Link</h1>
+          <span id="version-badge" class="version-badge">v0.2.0</span>
+        </div>
+        <p class="subtitle">Bridge between <strong>Grok Build</strong> (this IDE agent) and <strong>SuperGrok</strong> in your browser.</p>
+        <p id="bridge-status" class="bridge-status">Bridge starting...</p>
+      </header>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>From Grok Build</h2>
+          <button type="button" id="refresh-queue-btn" class="btn btn-small">Refresh</button>
+        </div>
+        <div id="handoff-queue" class="handoff-queue">
+          <p class="empty-note">No handoffs yet. Grok Build sends messages to this app on port <span id="bridge-port">3877</span>.</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Send to SuperGrok</h2>
+        <label class="field-label" for="prompt">Message</label>
+        <textarea id="prompt" class="prompt" rows="10" placeholder="Handoff from Grok Build appears here, or type your own message..."></textarea>
+        <label class="field-label" for="context">Context (optional, from Grok Build)</label>
+        <textarea id="context" class="context" rows="4" placeholder="Extra context, file paths, constraints..."></textarea>
+        <div class="actions">
+          <button type="button" id="paste-btn" class="btn">Paste clipboard</button>
+          <button type="button" id="clear-btn" class="btn">Clear</button>
+          <button type="button" id="open-btn" class="btn btn-primary">Open SuperGrok</button>
+        </div>
+        <p class="hint">Shortcut: Ctrl+Enter. Default: <code>grok.com</code> with clipboard backup.</p>
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="panel">
+        <h2>Reply to Grok Build</h2>
+        <p class="panel-note">Paste SuperGrok's answer here so Grok Build can poll it via the bridge API.</p>
+        <label class="field-label" for="response">SuperGrok response</label>
+        <textarea id="response" class="response" rows="8" placeholder="Paste SuperGrok's reply..."></textarea>
+        <div class="actions">
+          <button type="button" id="submit-response-btn" class="btn btn-primary">Save response for Grok Build</button>
+        </div>
+        <p id="response-status" class="status" role="status" aria-live="polite"></p>
+      </section>
+
+      <details class="options">
+        <summary>Manual options</summary>
+        <div class="options-body">
+          <fieldset class="option-group">
+            <legend>SuperGrok URL</legend>
+            <label><input type="radio" name="grok-host" value="com" checked /> grok.com (SuperGrok)</label>
+            <label><input type="radio" name="grok-host" value="xai" /> grok.x.ai with ?q= prefill</label>
+          </fieldset>
+          <label class="checkbox-row">
+            <input type="checkbox" id="copy-on-open" checked />
+            Copy full message to clipboard when opening SuperGrok
+          </label>
+        </div>
+      </details>
+
+      <footer class="footer">
+        <p>Data folder: <code id="data-dir-hint">~/.grok-link</code>. Grok Build integration: <code>docs/GROK-BUILD-INTEGRATION.md</code></p>
+      </footer>
+    </main>
+  </body>
+</html>
