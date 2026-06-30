@@ -5,6 +5,34 @@
     <link rel="stylesheet" href="styles.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Grok Link</title>
+    <script>
+      (function () {
+        function hero(title, sub, mode) {
+          var root = document.getElementById("status-hero");
+          var titleEl = document.getElementById("status-title");
+          var subEl = document.getElementById("status-subtitle");
+          if (root && mode) root.className = "status-hero status-hero--" + mode;
+          if (titleEl) titleEl.textContent = title;
+          if (subEl) subEl.textContent = sub;
+        }
+        hero("Loading...", "Checking bridge...", "ready");
+        function pollBridge() {
+          if (document.visibilityState === "hidden") return;
+          fetch("http://127.0.0.1:3877/api/health", { cache: "no-store" })
+            .then(function (r) { return r.json(); })
+            .then(function (j) {
+              if (j && j.ok) {
+                hero("Grok Link is running", "Bridge connected on port 3877.", "ready");
+              }
+            })
+            .catch(function () {});
+        }
+        pollBridge();
+        setInterval(pollBridge, 3000);
+        document.addEventListener("visibilitychange", pollBridge);
+        window.__grokLinkHero = hero;
+      })();
+    </script>
     <script type="module" src="/main.js" defer></script>
   </head>
   <body>
@@ -14,7 +42,7 @@
       <header class="header">
         <div class="header-row">
           <h1>Grok Link</h1>
-          <span id="version-badge" class="version-badge">v0.5.6</span>
+          <span id="version-badge" class="version-badge">v0.5.7</span>
           <button type="button" id="show-guide-btn" class="btn btn-small btn-ghost hidden">Setup guide</button>
         </div>
       </header>
@@ -27,10 +55,9 @@
       <section id="status-hero" class="status-hero">
         <span id="status-dot" class="status-dot" aria-hidden="true"></span>
         <div class="status-hero-text">
-          <strong id="status-title">Starting…</strong>
-          <p id="status-subtitle">Checking that Grok Link is ready.</p>
+          <strong id="status-title">Loading...</strong>
+          <p id="status-subtitle">Checking bridge...</p>
         </div>
-        <button type="button" id="hide-tray-btn" class="btn btn-small">Hide to tray</button>
       </section>
 
       <!-- Setup guide: shown until user completes setup -->
@@ -91,7 +118,7 @@
             <div class="guide-step-body">
               <p>You're looking at it. <strong>You do not need to keep this window open.</strong></p>
               <ul class="plain-list">
-                <li>Closing the window hides Grok Link to your <strong>system tray</strong> (near the clock).</li>
+                <li>Closing the window or clicking <strong>minimize</strong> sends Grok Link to your <strong>system tray</strong> (near the clock).</li>
                 <li>The messenger keeps working in the background.</li>
                 <li>Click the tray icon anytime to open this window again.</li>
                 <li>It also starts when you sign in to Windows.</li>

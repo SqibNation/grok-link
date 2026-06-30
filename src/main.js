@@ -74,8 +74,11 @@ function updateHeroState(mode, title, subtitle) {
   if (subEl) subEl.textContent = subtitle;
 }
 
-function updateBridgeHero(items = []) {
-  if (!bridgeOk) return;
+function updateBridgeHero(items = [], online = bridgeOk) {
+  if (!online) {
+    updateHeroState("ready", "Connecting...", "Checking bridge...");
+    return;
+  }
 
   const pending = items.filter((h) => h.status === "pending").length;
   const setupDone = isSetupComplete();
@@ -364,6 +367,17 @@ async function fetchHandoffsHttp() {
 
 async function refreshQueue() {
   try {
+    const items = await tauriInvoke("list_handoffs");
+    bridgeOk = true;
+    renderHandoffQueue(items || []);
+    setBridgeOnline(true);
+    renderGuideUI();
+    return items || [];
+  } catch {
+    // fall through to HTTP
+  }
+
+  try {
     const httpItems = await fetchHandoffsHttp();
     if (httpItems) {
       bridgeOk = true;
@@ -373,23 +387,14 @@ async function refreshQueue() {
       return httpItems;
     }
   } catch {
-    // fall through to Tauri invoke
+    // both paths failed
   }
 
-  try {
-    const items = await tauriInvoke("list_handoffs");
-    bridgeOk = true;
-    renderHandoffQueue(items || []);
-    setBridgeOnline(true);
-    renderGuideUI();
-    return items || [];
-  } catch (e) {
-    bridgeOk = false;
-    setBridgeOnline(false, e.message || String(e));
-    updateHeroState("error", "Grok Link isn't responding", "Try the desktop shortcut or restart from the system tray.");
-    renderGuideUI();
-    return [];
-  }
+  bridgeOk = false;
+  setBridgeOnline(false);
+  updateHeroState("error", "Grok Link isn't responding", "Try the desktop shortcut or restart from the system tray.");
+  renderGuideUI();
+  return [];
 }
 
 function setBridgeOnline(ok, detail = "") {
@@ -497,32 +502,6 @@ async function submitResponse() {
   }
 }
 
-async function hideToTray() {
-  try {
-    const api = window.__TAURI__?.webviewWindow;
-    if (api?.getCurrentWebviewWindow) {
-      const win = api.getCurrentWebviewWindow();
-      if (win?.setSkipTaskbar && win?.hide) {
-        await win.setSkipTaskbar(true);
-        await win.hide();
-        showToast(
-          "Hidden to tray. Click the Grok Link icon near the clock to reopen.",
-          "info"
-        );
-        return;
-      }
-    }
-    await tauriInvoke("hide_to_tray");
-    showToast(
-      "Hidden to tray. Click the Grok Link icon near the clock to reopen.",
-      "info"
-    );
-  } catch (e) {
-    const msg = e?.message || String(e);
-    showToast(`Could not hide to tray: ${msg}`, "info");
-  }
-}
-
 function bindOptionsPersistence() {
   const saved = getSettings();
   if (saved.host) {
@@ -545,11 +524,15 @@ async function initMeta() {
     appVersion = await tauriInvoke("app_version");
     document.getElementById("version-badge").textContent = `v${appVersion}`;
   } catch {
-    document.getElementById("version-badge").textContent = "v0.5.6";
+    document.getElementById("version-badge").textContent = "v0.5.7";
   }
   try {
     const port = await tauriInvoke("bridge_port");
     document.getElementById("bridge-port").textContent = String(port);
+    bridgeOk = true;
+    setBridgeOnline(true);
+    updateBridgeHero([], true);
+    renderGuideUI();
   } catch { /* default */ }
   try {
     const dir = await tauriInvoke("data_dir_path");
@@ -590,7 +573,7 @@ async function init() {
   bindOptionsPersistence();
   bindGuideEvents();
   bindVisibilityRefresh();
-  updateHeroState("ready", "Connecting...", "Checking bridge...");
+  void refreshQueue();
   await initMeta();
 
   document.getElementById("open-btn")?.addEventListener("click", () => void openSuperGrok());
@@ -604,7 +587,6 @@ async function init() {
   });
   document.getElementById("refresh-queue-btn")?.addEventListener("click", () => void refreshQueue());
   document.getElementById("submit-response-btn")?.addEventListener("click", () => void submitResponse());
-  document.getElementById("hide-tray-btn")?.addEventListener("click", () => void hideToTray());
   document.getElementById("prompt")?.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();

@@ -1,7 +1,7 @@
 {
   "name": "grok-link",
   "private": true,
-  "version": "0.5.6",
+  "version": "0.5.7",
   "description": "Grok Link - bridge between Grok Build and SuperGrok",
   "author": "Zachary H. Roberts",
   "license": "MIT",
