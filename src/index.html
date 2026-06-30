@@ -8,79 +8,123 @@
     <script type="module" src="/main.js" defer></script>
   </head>
   <body>
+    <div id="toast-root" class="toast-root" aria-live="polite"></div>
+
     <main class="app">
       <header class="header">
         <div class="header-row">
           <h1>Grok Link</h1>
-          <span id="version-badge" class="version-badge">v0.3.0</span>
+          <span id="version-badge" class="version-badge">v0.5.0</span>
         </div>
-        <p class="subtitle">Bridge between <strong>Grok Build</strong> (this IDE agent) and <strong>SuperGrok</strong> in your browser.</p>
-        <p id="bridge-status" class="bridge-status">Bridge starting...</p>
+        <p class="subtitle">Your bridge between <strong>Grok Build</strong> (IDE) and <strong>SuperGrok</strong> (browser).</p>
       </header>
 
-      <section class="panel">
+      <section id="status-hero" class="status-hero">
+        <span id="status-dot" class="status-dot" aria-hidden="true"></span>
+        <div class="status-hero-text">
+          <strong id="status-title">Starting…</strong>
+          <p id="status-subtitle">Checking the local bridge.</p>
+        </div>
+        <button type="button" id="hide-tray-btn" class="btn btn-small">Hide to tray</button>
+      </section>
+
+      <section id="onboarding" class="panel onboarding hidden">
         <div class="panel-head">
-          <h2>From Grok Build</h2>
-          <button type="button" id="refresh-queue-btn" class="btn btn-small">Refresh</button>
+          <h2>Get started</h2>
+          <button type="button" id="dismiss-onboarding-btn" class="btn btn-small btn-ghost">Dismiss</button>
         </div>
-        <div id="handoff-queue" class="handoff-queue">
-          <p class="empty-note">No handoffs yet. Grok Build sends messages to this app on port <span id="bridge-port">3877</span>.</p>
-        </div>
+        <p class="panel-note">Three quick steps — then Grok Build and SuperGrok stay in sync automatically.</p>
+        <ol class="setup-steps">
+          <li id="step-bridge" class="setup-step">
+            <span class="setup-step-icon">1</span>
+            <div>
+              <strong>Keep Grok Link running</strong>
+              <p>It lives in your system tray. Closing this window does <em>not</em> quit the app.</p>
+            </div>
+          </li>
+          <li id="step-browser" class="setup-step">
+            <span class="setup-step-icon">2</span>
+            <div>
+              <strong>Set up auto-sync (one time)</strong>
+              <p>Install the browser bridge so SuperGrok replies flow back to Grok Build.</p>
+              <button type="button" id="onboarding-install-btn" class="btn btn-small">Install browser bridge</button>
+            </div>
+          </li>
+          <li id="step-ready" class="setup-step">
+            <span class="setup-step-icon">3</span>
+            <div>
+              <strong>Use it from Grok Build</strong>
+              <p>When Grok Build hands off a question, pick it below and click <strong>Open SuperGrok</strong>.</p>
+            </div>
+          </li>
+        </ol>
       </section>
 
       <section class="panel">
-        <h2>Send to SuperGrok</h2>
-        <label class="field-label" for="prompt">Message</label>
-        <textarea id="prompt" class="prompt" rows="10" placeholder="Handoff from Grok Build appears here, or type your own message..."></textarea>
-        <label class="field-label" for="context">Context (optional, from Grok Build)</label>
-        <textarea id="context" class="context" rows="4" placeholder="Extra context, file paths, constraints..."></textarea>
-        <div class="actions">
-          <button type="button" id="paste-btn" class="btn">Paste clipboard</button>
-          <button type="button" id="clear-btn" class="btn">Clear</button>
-          <button type="button" id="open-btn" class="btn btn-primary">Open SuperGrok</button>
+        <div class="panel-head">
+          <h2>Messages from Grok Build</h2>
+          <button type="button" id="refresh-queue-btn" class="btn btn-small">Refresh</button>
         </div>
-        <p class="hint">Shortcut: Ctrl+Enter. Opens <code>grok.com/?q=...</code> to prefill (and usually auto-submit). Clipboard is a backup.</p>
+        <div id="handoff-queue" class="handoff-queue">
+          <p class="empty-note">No messages yet. When Grok Build sends a handoff, it will appear here.</p>
+        </div>
+      </section>
+
+      <section class="panel panel-primary">
+        <h2>Open in SuperGrok</h2>
+        <p class="panel-note">Select a message above, review it, then open SuperGrok. With the browser bridge, the reply syncs back on its own.</p>
+        <label class="field-label" for="prompt">Message</label>
+        <textarea id="prompt" class="prompt" rows="8" placeholder="A handoff from Grok Build appears here…"></textarea>
+        <label class="field-label" for="context">Extra context <span class="label-optional">(optional)</span></label>
+        <textarea id="context" class="context" rows="3" placeholder="File paths, constraints, code summary…"></textarea>
+        <div class="actions actions-primary">
+          <button type="button" id="open-btn" class="btn btn-primary btn-large">Open SuperGrok</button>
+          <button type="button" id="paste-btn" class="btn">Paste from clipboard</button>
+          <button type="button" id="clear-btn" class="btn">Clear</button>
+        </div>
+        <p class="hint">Tip: <kbd>Ctrl</kbd>+<kbd>Enter</kbd> opens SuperGrok. Clipboard copy is a backup if the browser doesn't prefill.</p>
         <p id="status" class="status" role="status" aria-live="polite"></p>
       </section>
 
       <section class="panel panel-bridge">
-        <h2>Seamless bridge</h2>
-        <p class="panel-note">Install the browser bridge once. SuperGrok replies then sync to Grok Build automatically — no manual paste.</p>
+        <h2>Browser bridge</h2>
+        <p class="panel-note">One-time Tampermonkey setup. You'll see a green badge on grok.com when a reply syncs.</p>
         <div class="actions">
-          <button type="button" id="install-bridge-btn" class="btn btn-primary">Install browser bridge</button>
+          <button type="button" id="install-bridge-btn" class="btn">Install browser bridge</button>
+          <span id="bridge-setup-pill" class="pill pill-muted">Not confirmed</span>
         </div>
-        <p class="hint">Uses Tampermonkey + <code>browser/grok-link-bridge.user.js</code>. Shows a green badge on grok.com when synced.</p>
         <p id="bridge-install-status" class="status" role="status" aria-live="polite"></p>
       </section>
 
       <section class="panel">
-        <h2>Reply to Grok Build</h2>
-        <p class="panel-note">Auto-synced when the browser bridge is installed. Or paste SuperGrok's answer here manually.</p>
-        <label class="field-label" for="response">SuperGrok response</label>
-        <textarea id="response" class="response" rows="8" placeholder="Paste SuperGrok's reply..."></textarea>
+        <h2>Manual reply</h2>
+        <p class="panel-note">Only needed if you skipped the browser bridge. Paste SuperGrok's answer here.</p>
+        <label class="field-label" for="response">SuperGrok's reply</label>
+        <textarea id="response" class="response" rows="6" placeholder="Paste the reply…"></textarea>
         <div class="actions">
-          <button type="button" id="submit-response-btn" class="btn btn-primary">Save response for Grok Build</button>
+          <button type="button" id="submit-response-btn" class="btn">Save for Grok Build</button>
         </div>
         <p id="response-status" class="status" role="status" aria-live="polite"></p>
       </section>
 
       <details class="options">
-        <summary>Manual options</summary>
+        <summary>Advanced options</summary>
         <div class="options-body">
           <fieldset class="option-group">
             <legend>SuperGrok URL</legend>
-            <label><input type="radio" name="grok-host" value="com" checked /> grok.com/?q= (SuperGrok)</label>
-            <label><input type="radio" name="grok-host" value="xai" /> grok.x.ai/?q= (legacy)</label>
+            <label><input type="radio" name="grok-host" value="com" checked /> grok.com (recommended)</label>
+            <label><input type="radio" name="grok-host" value="xai" /> grok.x.ai (legacy)</label>
           </fieldset>
           <label class="checkbox-row">
             <input type="checkbox" id="copy-on-open" checked />
-            Copy full message to clipboard when opening SuperGrok
+            Copy message to clipboard when opening SuperGrok
           </label>
+          <p id="bridge-status" class="bridge-status">Bridge starting…</p>
         </div>
       </details>
 
       <footer class="footer">
-        <p>Data folder: <code id="data-dir-hint">~/.grok-link</code>. Grok Build integration: <code>docs/GROK-BUILD-INTEGRATION.md</code></p>
+        <p>Runs in the background on port <span id="bridge-port">3877</span>. Data: <code id="data-dir-hint">~/.grok-link</code></p>
       </footer>
     </main>
   </body>

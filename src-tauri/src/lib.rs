@@ -106,6 +106,24 @@ fn bridge_port() -> u16 {
 }
 
 #[tauri::command]
+fn app_version() -> String {
+    env!("CARGO_PKG_VERSION").to_string()
+}
+
+#[tauri::command]
+fn data_dir_path() -> String {
+    bridge::bridge_data_dir().to_string_lossy().into_owned()
+}
+
+#[tauri::command]
+fn hide_to_tray(app: AppHandle) -> Result<(), String> {
+    app.get_webview_window("main")
+        .ok_or("main window not found")?
+        .hide()
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 fn list_handoffs(app: AppHandle) -> Result<Vec<Handoff>, String> {
     let state = managed_state(&app).ok_or("bridge not ready")?;
     Ok(state.list())
@@ -183,6 +201,9 @@ pub fn run() {
             read_clipboard_text,
             write_clipboard_text,
             bridge_port,
+            app_version,
+            data_dir_path,
+            hide_to_tray,
             list_handoffs,
             mark_handoff_sent,
             submit_handoff_response,

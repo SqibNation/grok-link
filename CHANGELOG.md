@@ -2,6 +2,21 @@
 
 All notable changes to Grok Link are documented here.
 
+## [0.5.0] - 2026-06-30
+
+### Added
+- First-run onboarding with 3-step setup guide (dismissible)
+- Status hero: plain-language ready / new messages / error states
+- Toast notifications for new handoffs, SuperGrok opens, and synced replies
+- **Hide to tray** button with clear tray behavior messaging
+- Auto-select newest pending handoff when Grok Build sends a message
+- Status pills on message cards (New / Opened / Done)
+
+### Changed
+- Simpler UI copy and workflow-focused layout
+- Technical bridge details moved to Advanced options
+- App version and data folder shown from the running app
+
 ## [0.4.0] - 2026-06-30
 
 ### Added
