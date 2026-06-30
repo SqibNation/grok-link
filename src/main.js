@@ -347,12 +347,41 @@ function pickLatestActionable(items) {
   );
 }
 
+function bridgePort() {
+  return Number(document.getElementById("bridge-port")?.textContent || 3877);
+}
+
+async function fetchHandoffsHttp() {
+  const port = bridgePort();
+  const healthRes = await fetch(`http://127.0.0.1:${port}/api/health`, { cache: "no-store" });
+  if (!healthRes.ok) return null;
+  const health = await healthRes.json();
+  if (!health.ok) return null;
+  const listRes = await fetch(`http://127.0.0.1:${port}/api/handoffs`, { cache: "no-store" });
+  if (!listRes.ok) return null;
+  return listRes.json();
+}
+
 async function refreshQueue() {
+  try {
+    const httpItems = await fetchHandoffsHttp();
+    if (httpItems) {
+      bridgeOk = true;
+      renderHandoffQueue(httpItems);
+      setBridgeOnline(true);
+      renderGuideUI();
+      return httpItems;
+    }
+  } catch {
+    // fall through to Tauri invoke
+  }
+
   try {
     const items = await tauriInvoke("list_handoffs");
     bridgeOk = true;
     renderHandoffQueue(items || []);
     setBridgeOnline(true);
+    renderGuideUI();
     return items || [];
   } catch (e) {
     bridgeOk = false;
@@ -470,6 +499,19 @@ async function submitResponse() {
 
 async function hideToTray() {
   try {
+    const api = window.__TAURI__?.webviewWindow;
+    if (api?.getCurrentWebviewWindow) {
+      const win = api.getCurrentWebviewWindow();
+      if (win?.setSkipTaskbar && win?.hide) {
+        await win.setSkipTaskbar(true);
+        await win.hide();
+        showToast(
+          "Hidden to tray. Click the Grok Link icon near the clock to reopen.",
+          "info"
+        );
+        return;
+      }
+    }
     await tauriInvoke("hide_to_tray");
     showToast(
       "Hidden to tray. Click the Grok Link icon near the clock to reopen.",
@@ -503,7 +545,7 @@ async function initMeta() {
     appVersion = await tauriInvoke("app_version");
     document.getElementById("version-badge").textContent = `v${appVersion}`;
   } catch {
-    document.getElementById("version-badge").textContent = "v0.5.5";
+    document.getElementById("version-badge").textContent = "v0.5.6";
   }
   try {
     const port = await tauriInvoke("bridge_port");
@@ -533,9 +575,22 @@ function bindGuideEvents() {
   });
 }
 
+function bindVisibilityRefresh() {
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      void refreshQueue();
+    }
+  });
+  void tauriListen("window-shown", () => {
+    void refreshQueue();
+  });
+}
+
 async function init() {
   bindOptionsPersistence();
   bindGuideEvents();
+  bindVisibilityRefresh();
+  updateHeroState("ready", "Connecting...", "Checking bridge...");
   await initMeta();
 
   document.getElementById("open-btn")?.addEventListener("click", () => void openSuperGrok());
@@ -557,7 +612,7 @@ async function init() {
     }
   });
 
-  await tauriListen("handoff-received", async () => {
+  void tauriListen("handoff-received", async () => {
     const items = await refreshQueue();
     const next = pickLatestActionable(items);
     if (next?.status === "pending") {
@@ -566,7 +621,7 @@ async function init() {
     }
   });
 
-  await tauriListen("handoff-answered", async () => {
+  void tauriListen("handoff-answered", async () => {
     await refreshQueue();
     showToast("Answer synced — Grok Build can continue", "success");
   });

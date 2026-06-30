@@ -5,6 +5,8 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 use std::sync::Arc;
+use std::thread;
+use std::time::Duration;
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
@@ -62,7 +64,23 @@ fn show_main_window(app: &AppHandle) {
         let _ = window.unminimize();
         let _ = window.show();
         let _ = window.set_focus();
+        let _ = app.emit("window-shown", ());
     }
+}
+
+fn minimize_to_tray(app: &AppHandle, label: &str) {
+    let app = app.clone();
+    let label = label.to_string();
+    thread::spawn(move || {
+        thread::sleep(Duration::from_millis(120));
+        let Some(window) = app.get_webview_window(&label) else {
+            return;
+        };
+        if window.is_minimized().unwrap_or(false) {
+            let _ = window.unminimize();
+            let _ = hide_main_to_tray(&window);
+        }
+    });
 }
 
 fn hide_main_to_tray(window: &tauri::WebviewWindow) -> Result<(), String> {
@@ -234,11 +252,19 @@ pub fn run() {
             Ok(())
         })
         .on_window_event(|window, event| {
-            if let WindowEvent::CloseRequested { api, .. } = event {
-                if let Some(webview) = window.app_handle().get_webview_window(window.label()) {
-                    let _ = hide_main_to_tray(&webview);
+            match event {
+                WindowEvent::Focused(false) => {
+                    minimize_to_tray(window.app_handle(), window.label());
                 }
-                api.prevent_close();
+                WindowEvent::CloseRequested { api, .. } => {
+                    if let Some(webview) =
+                        window.app_handle().get_webview_window(window.label())
+                    {
+                        let _ = hide_main_to_tray(&webview);
+                    }
+                    api.prevent_close();
+                }
+                _ => {}
             }
         })
         .invoke_handler(tauri::generate_handler![

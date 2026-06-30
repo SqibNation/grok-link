@@ -1,0 +1,18 @@
+[[permission]]
+identifier = "allow-app-commands"
+description = "Grok Link bridge and UI commands"
+commands.allow = [
+  "open_in_browser",
+  "read_clipboard_text",
+  "write_clipboard_text",
+  "bridge_port",
+  "app_version",
+  "data_dir_path",
+  "hide_to_tray",
+  "list_handoffs",
+  "mark_handoff_sent",
+  "submit_handoff_response",
+  "refresh_inbox",
+  "install_browser_bridge",
+  "browser_bridge_version",
+]
