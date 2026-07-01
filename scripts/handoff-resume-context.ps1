@@ -11,8 +11,8 @@ Copyright: 2026 Zachary H. Roberts
 
 PROJECT: Grok Link
 GitHub: https://github.com/memento-mori1984/grok-link
-Latest release: v0.5.7 (June 2026)
-Release URL: https://github.com/memento-mori1984/grok-link/releases/tag/v0.5.7
+Latest release: v0.5.8 (July 2026)
+Release URL: https://github.com/memento-mori1984/grok-link/releases/tag/v0.5.8
 Distribution: Published — portable exe, NSIS installer, SHA-256 checksums, release zip
 
 WHAT IT IS:
@@ -39,6 +39,7 @@ VERSION MILESTONES (built in ~2 days, June 2026):
 - v0.5.0–0.5.1: Plain-English setup wizard, onboarding, toasts, status hero
 - v0.5.4: One-click Tampermonkey install, bridge auto-recovery scripts, Test-GrokLinkBridge.ps1
 - v0.5.6–0.5.7: Minimize-to-tray, fixed status UI, Tauri ACL permissions, GitHub publish
+- v0.5.8: Browser bridge v0.5.0, query-param handoff IDs, URL length cap, Test-BrowserBridge.ps1
 
 KEY FEATURES SHIPPED:
 - REST handoff API (health, create handoff, list, poll, submit response)

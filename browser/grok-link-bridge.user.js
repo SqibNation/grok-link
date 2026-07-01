@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Grok Link Browser Bridge
 // @namespace    com.ranzh.grok-link
-// @version      0.4.0
+// @version      0.5.0
 // @description  Auto-sync SuperGrok replies back to Grok Build via local Grok Link bridge
 // @match        https://grok.com/*
 // @match        https://www.grok.com/*
@@ -50,17 +50,30 @@
     });
   }
 
+  function storeHandoffId(id) {
+    if (!id) return;
+    localStorage.setItem(STORAGE_KEY, id);
+    sessionStorage.setItem(STORAGE_KEY, id);
+  }
+
   function parseHandoffId() {
+    const params = new URLSearchParams(location.search);
+    const queryId = params.get("grok-link-id");
+    if (queryId && /^[a-f0-9]+$/i.test(queryId)) {
+      storeHandoffId(queryId);
+      return queryId;
+    }
+
     const hashMatch = location.hash.match(/grok-link-id=([a-f0-9]+)/i);
     if (hashMatch) {
-      localStorage.setItem(STORAGE_KEY, hashMatch[1]);
-      sessionStorage.setItem(STORAGE_KEY, hashMatch[1]);
+      storeHandoffId(hashMatch[1]);
       return hashMatch[1];
     }
+
     return sessionStorage.getItem(STORAGE_KEY) || localStorage.getItem(STORAGE_KEY);
   }
 
-  function showBadge(text, ok, warn) {
+  function showBadge(text, ok, warn, interactive) {
     let el = document.getElementById("grok-link-bridge-badge");
     if (!el) {
       el = document.createElement("div");
@@ -77,38 +90,77 @@
         color: "#fff",
         background: "#1e3a5f",
         boxShadow: "0 4px 12px rgba(0,0,0,.45)",
-        pointerEvents: "none",
-        maxWidth: "320px",
+        pointerEvents: interactive ? "auto" : "none",
+        maxWidth: "360px",
+        lineHeight: "1.35",
       });
       document.body.appendChild(el);
     }
     el.textContent = text;
     el.style.background = ok ? "#166534" : warn ? "#854d0e" : "#1e3a5f";
+    el.style.pointerEvents = interactive ? "auto" : "none";
+    el.style.cursor = interactive ? "pointer" : "default";
   }
 
-  function collectTextBlocks(root) {
-    const out = [];
-    const nodes = root.querySelectorAll(
-      "[data-testid*='message'], [data-testid*='response'], article, [class*='message'], [class*='markdown'], [class*='response'], [role='article']"
-    );
-    nodes.forEach((el) => {
-      if (el.closest("#grok-link-bridge-badge")) return;
-      const text = (el.innerText || "").trim();
-      if (text.length < MIN_RESPONSE_CHARS || text.length > 80000) return;
-      out.push(text);
-    });
-    if (out.length) return out;
-    const fallback = (root.innerText || "").trim();
-    if (fallback.length >= MIN_RESPONSE_CHARS) return [fallback];
-    return [];
+  function isLikelyAssistant(el) {
+    const role = el.getAttribute?.("data-message-author-role");
+    if (role === "assistant") return true;
+    const testId = el.getAttribute?.("data-testid") || "";
+    if (/assistant|response|bot|grok/i.test(testId) && !/user|human|prompt|input/i.test(testId)) {
+      return true;
+    }
+    const cls = el.className?.toString?.() || "";
+    if (/assistant|response|bot/i.test(cls) && !/user|human|prompt|input/i.test(cls)) {
+      return true;
+    }
+    return false;
+  }
+
+  function extractMessageBlocks(root) {
+    const selectors = [
+      "[data-testid*='message']",
+      "[data-testid*='response']",
+      "[data-message-author-role]",
+      "article",
+      "[class*='message']",
+      "[class*='markdown']",
+      "[class*='response']",
+      "[role='article']",
+    ];
+    const seen = new Set();
+    const blocks = [];
+
+    for (const sel of selectors) {
+      root.querySelectorAll(sel).forEach((el) => {
+        if (el.closest("#grok-link-bridge-badge")) return;
+        const text = (el.innerText || "").trim();
+        if (text.length < MIN_RESPONSE_CHARS || text.length > 80000) return;
+        if (seen.has(text)) return;
+        seen.add(text);
+        blocks.push({ el, text, assistant: isLikelyAssistant(el) });
+      });
+      if (blocks.length >= 2) break;
+    }
+
+    return blocks;
+  }
+
+  function pickAssistantText(blocks) {
+    if (!blocks.length) return "";
+
+    for (let i = blocks.length - 1; i >= 0; i--) {
+      if (blocks[i].assistant) return blocks[i].text;
+    }
+
+    // With multiple blocks, the last one is usually the assistant reply.
+    if (blocks.length >= 2) return blocks[blocks.length - 1].text;
+
+    return blocks[0].text;
   }
 
   function extractLatestAssistantText() {
     const root = document.querySelector("main") || document.body;
-    const blocks = collectTextBlocks(root);
-    if (!blocks.length) return "";
-    const unique = [...new Set(blocks)];
-    return unique.sort((a, b) => b.length - a.length)[0] || "";
+    return pickAssistantText(extractMessageBlocks(root));
   }
 
   async function checkBridgeHealth() {
@@ -145,9 +197,9 @@
     const bridgeOk = await checkBridgeHealth();
     if (!bridgeOk) {
       showBadge("Grok Link: bridge offline — keep app running", false, true);
+    } else {
+      showBadge(`Grok Link: watching ${handoffId.slice(0, 8)}…`);
     }
-
-    showBadge(`Grok Link: watching ${handoffId.slice(0, 8)}…`);
 
     if (await checkAlreadyAnswered(handoffId)) {
       showBadge("Grok Link: already synced ✓", true);
@@ -155,26 +207,33 @@
       return;
     }
 
-    let baseline = extractLatestAssistantText();
-    let baselineLen = baseline.length;
+    const root = document.querySelector("main") || document.body;
+    const initialBlocks = extractMessageBlocks(root);
+    let baselineCount = initialBlocks.length;
+    let baselineLast = initialBlocks.length ? initialBlocks[initialBlocks.length - 1].text : "";
     let lastSeen = "";
     let stableSince = 0;
     let submitting = false;
 
-    async function trySync() {
+    async function trySync(force = false) {
       if (submitting) return;
-      const text = extractLatestAssistantText();
+      const blocks = extractMessageBlocks(root);
+      const text = pickAssistantText(blocks);
       if (!text || text.length < MIN_RESPONSE_CHARS) return;
-      if (baseline && text === baseline) return;
-      if (text.length <= baselineLen && baselineLen > 0) return;
 
-      if (text !== lastSeen) {
-        lastSeen = text;
-        stableSince = Date.now();
-        showBadge(`Grok Link: reply detected (${text.length} chars)…`);
-        return;
+      const hasNewMessage = blocks.length > baselineCount || text !== baselineLast;
+      if (!force && !hasNewMessage) return;
+      if (!force && baselineLast && text === baselineLast) return;
+
+      if (!force) {
+        if (text !== lastSeen) {
+          lastSeen = text;
+          stableSince = Date.now();
+          showBadge(`Grok Link: reply detected (${text.length} chars)…`);
+          return;
+        }
+        if (Date.now() - stableSince < STABLE_MS) return;
       }
-      if (Date.now() - stableSince < STABLE_MS) return;
 
       submitting = true;
       showBadge("Grok Link: syncing…");
@@ -186,22 +245,27 @@
           sessionStorage.removeItem(STORAGE_KEY);
           return;
         }
-        showBadge("Grok Link: sync failed — retrying…", false, true);
+        showBadge("Grok Link: sync failed — click badge to retry", false, true, true);
         submitting = false;
       } catch {
-        showBadge("Grok Link: bridge unreachable", false, true);
+        showBadge("Grok Link: bridge unreachable — click badge to retry", false, true, true);
         submitting = false;
       }
     }
 
-    window.setInterval(() => void trySync(), POLL_MS);
-
-    const root = document.querySelector("main") || document.body;
-    if (root && typeof MutationObserver !== "undefined") {
-      const obs = new MutationObserver(() => {
-        const now = extractLatestAssistantText();
-        if (now && now.length > baselineLen) void trySync();
+    const badge = document.getElementById("grok-link-bridge-badge");
+    if (badge && !badge.dataset.grokLinkBound) {
+      badge.dataset.grokLinkBound = "1";
+      badge.addEventListener("click", () => {
+        submitting = false;
+        void trySync(true);
       });
+    }
+
+    window.setInterval(() => void trySync(false), POLL_MS);
+
+    if (root && typeof MutationObserver !== "undefined") {
+      const obs = new MutationObserver(() => void trySync(false));
       obs.observe(root, { childList: true, subtree: true, characterData: true });
     }
   }
@@ -209,7 +273,11 @@
   function boot() {
     const id = parseHandoffId();
     if (id) {
-      void start(id);
+      if (localStorage.getItem(SYNC_KEY) !== id) {
+        void start(id);
+      } else {
+        showBadge("Grok Link: already synced ✓", true);
+      }
       return;
     }
     showBadge("Grok Link: waiting for handoff id…", false, true);

@@ -272,9 +272,10 @@ function buildSuperGrokUrl(text, handoffId = activeHandoffId) {
   const encoded = encodeURIComponent(text);
   const base =
     getSelectedHost() === "xai" ? "https://grok.x.ai/" : "https://grok.com/";
-  let url = `${base}?q=${encoded}`;
-  if (handoffId) url += `#grok-link-id=${handoffId}`;
-  return url;
+  if (handoffId) {
+    return `${base}?grok-link-id=${handoffId}&q=${encoded}#grok-link-id=${handoffId}`;
+  }
+  return `${base}?q=${encoded}`;
 }
 
 function statusLabel(status) {
@@ -524,7 +525,7 @@ async function initMeta() {
     appVersion = await tauriInvoke("app_version");
     document.getElementById("version-badge").textContent = `v${appVersion}`;
   } catch {
-    document.getElementById("version-badge").textContent = "v0.5.7";
+    document.getElementById("version-badge").textContent = "v0.5.8";
   }
   try {
     const port = await tauriInvoke("bridge_port");

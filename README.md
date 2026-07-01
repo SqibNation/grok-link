@@ -97,8 +97,8 @@ Rebuild and package in one step:
 ### Verify a download
 
 ```powershell
-Get-FileHash -Algorithm SHA256 "dist\release\Grok-Link-0.5.7-win64.zip"
-# Compare with dist\release\Grok-Link-0.5.7-win64.zip.sha256
+Get-FileHash -Algorithm SHA256 "dist\release\Grok-Link-0.5.8-win64.zip"
+# Compare with dist\release\Grok-Link-0.5.8-win64.zip.sha256
 ```
 
 ### Security note

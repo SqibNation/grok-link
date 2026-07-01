@@ -2,6 +2,16 @@
 
 All notable changes to Grok Link are documented here.
 
+## [0.5.8] - 2026-07-01
+
+### Added
+- `Test-BrowserBridge.ps1` — end-to-end browser bridge test (creates handoff, opens SuperGrok, polls for auto-sync)
+
+### Changed
+- Browser bridge userscript v0.5.0: better assistant reply detection, click badge to retry failed sync
+- SuperGrok URLs include `grok-link-id` query param (survives SPA navigation better than hash alone)
+- Long handoff messages truncate URL payload to avoid grok.com HTTP 431 errors
+
 ## [0.5.7] - 2026-06-30
 
 ### Changed
